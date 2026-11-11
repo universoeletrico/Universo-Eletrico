@@ -1,0 +1,10 @@
+UNIVERSO ELÉTRICO — AUTOMAÇÃO v2 (11/11/2026)
+
+✅ O Facebook e o Instagram estão conectados no Meta Business Suite.
+✅ O post Contator está agendado manualmente para 12/11 às 19h.
+✅ São 30 artes-base sem numeração, 30 legendas e plano de crescimento.
+🔒 Este robô está DESATIVADO. Não irá publicar sozinho até a integração oficial.
+🔒 Cada post precisa de aprovação humana antes de entrar na fila.
+➡️ Para implantar, crie um repositório GitHub novo e exclusivo para este projeto.
+➡️ Leia o README.md antes de adicionar qualquer credencial.
+⚠️ Não forneça suas senhas nem tokens nesta conversa.
