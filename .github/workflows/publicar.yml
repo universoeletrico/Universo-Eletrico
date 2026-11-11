@@ -1,0 +1,30 @@
+
+name: Universo Eletrico - Robo Diario
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 22 * * *'
+
+permissions:
+  contents: read
+
+jobs:
+  testar-robo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Baixar arquivos do projeto
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Executar testes do robo
+        run: python -m unittest discover -s tests -v
+
+      - name: Simular proxima publicacao
+        run: python src/publish_daily.py --dry-run
