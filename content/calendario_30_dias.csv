@@ -1,0 +1,31 @@
+﻿Dia;Assunto;Gancho;Formato;Status
+1;Contator elétrico;O que um contator faz?;Imagem;Aprovado para fila
+2;Disjuntor x fusível;Disjuntor ou fusível?;Imagem;Aprovado para fila
+3;Sensor indutivo;Como detecta metal?;Imagem;Aprovado para fila
+4;CLP;O cérebro da automação;Imagem;Aprovado para fila
+5;Inversor de frequência;Como controlar a velocidade?;Imagem;Aprovado para fila
+6;Motor trifásico;Por que três fases?;Imagem;Aprovado para fila
+7;Encoder;Como a máquina sabe a posição?;Imagem;Aprovado para fila
+8;Relé térmico;Quem protege o motor?;Imagem;Aprovado para fila
+9;Sensor capacitivo;Só detecta metal?;Imagem;Aprovado para fila
+10;IHM;Operador e máquina;Imagem;Aprovado para fila
+11;SCADA;O que um SCADA mostra?;Imagem;Aprovado para fila
+12;Contato NA/NF;NA e NF: qual a diferença?;Imagem;Aprovado para fila
+13;PROFINET;Rede industrial em tempo real;Imagem;Aprovado para fila
+14;PROFIBUS;A rede antes do Ethernet;Imagem;Aprovado para fila
+15;Sensores fotoelétricos;Detectar sem tocar;Imagem;Aprovado para fila
+16;Servo motor;Precisão no movimento;Imagem;Aprovado para fila
+17;SINAMICS;O que é SINAMICS?;Imagem;Aprovado para fila
+18;SIMOTION;Movimento sincronizado;Imagem;Aprovado para fila
+19;WinCC;O que faz o WinCC?;Imagem;Aprovado para fila
+20;24 Vcc;Por que tantos painéis usam 24 V?;Imagem;Aprovado para fila
+21;Ciclo de varredura;Como um CLP pensa?;Imagem;Aprovado para fila
+22;Sensor PNP/NPN;PNP ou NPN?;Imagem;Aprovado para fila
+23;PID;O que significa PID?;Imagem;Aprovado para fila
+24;Falha e alarme;Alarme não é diagnóstico completo;Imagem;Aprovado para fila
+25;Manutenção preventiva;Antes que a máquina pare;Imagem;Aprovado para fila
+26;Fibra óptica;Dados pela luz;Imagem;Aprovado para fila
+27;Motor x gerador;Qual a diferença?;Imagem;Aprovado para fila
+28;Sinal analógico;Digital ou analógico?;Imagem;Aprovado para fila
+29;Segurança industrial;Segurança vem antes da produção;Imagem;Aprovado para fila
+30;Robótica industrial;Como o robô sabe o destino?;Imagem;Aprovado para fila

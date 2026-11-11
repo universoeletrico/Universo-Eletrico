@@ -1,0 +1,16 @@
+{
+  "not_before_date": "2026-11-13",
+  "published": [],
+  "externally_scheduled": [
+    {
+      "id": "001",
+      "date": "2026-11-12",
+      "platforms": [
+        "Instagram",
+        "Facebook"
+      ],
+      "source": "Meta Business Suite",
+      "note": "Agendado pelo usuário para 19h. Não duplicar via robô."
+    }
+  ]
+}

@@ -1,0 +1,302 @@
+[
+  {
+    "id": "001",
+    "title": "Contator elétrico",
+    "hook": "O que um contator faz?",
+    "body": "É uma chave eletromagnética usada para comandar cargas elétricas à distância.",
+    "caption": "⚡ O que um contator faz?\n\nUm contator permite comandar cargas por meio de um circuito de controle. Ele não substitui, por si só, as proteções contra sobrecarga e curto-circuito.\n\n💡 Gostou? Salve este post para revisar depois e compartilhe com alguém que estuda elétrica!\n\n#UniversoEletrico #Eletrica #AutomacaoIndustrial #Eletricidade #ManutencaoIndustrial",
+    "approved": false,
+    "media_type": "IMAGE",
+    "format": "feed"
+  },
+  {
+    "id": "002",
+    "title": "Disjuntor x fusível",
+    "hook": "Disjuntor ou fusível?",
+    "body": "Ambos ajudam na proteção, mas seu modo de atuação e rearme são diferentes.",
+    "caption": "⚡ Disjuntor ou fusível?\n\nO fusível interrompe o circuito quando seu elemento interno atua; normalmente precisa ser substituído. O disjuntor pode ser rearmado após identificar e resolver a causa do disparo.\n\n💡 Gostou? Salve este post para revisar depois e compartilhe com alguém que estuda elétrica!\n\n#UniversoEletrico #Eletrica #AutomacaoIndustrial #Eletricidade #ManutencaoIndustrial",
+    "approved": false,
+    "media_type": "IMAGE",
+    "format": "feed"
+  },
+  {
+    "id": "003",
+    "title": "Sensor indutivo",
+    "hook": "Como detecta metal?",
+    "body": "O sensor indutivo detecta objetos metálicos sem contato físico.",
+    "caption": "⚡ Como detecta metal?\n\nSensores indutivos criam um campo eletromagnético para perceber a aproximação de metais. São comuns em máquinas e linhas de produção.\n\n💡 Gostou? Salve este post para revisar depois e compartilhe com alguém que estuda elétrica!\n\n#UniversoEletrico #Eletrica #AutomacaoIndustrial #Eletricidade #ManutencaoIndustrial",
+    "approved": false,
+    "media_type": "IMAGE",
+    "format": "feed"
+  },
+  {
+    "id": "004",
+    "title": "CLP",
+    "hook": "O cérebro da automação",
+    "body": "O CLP lê sinais, executa uma lógica e comanda saídas.",
+    "caption": "⚡ O cérebro da automação\n\nCLP é a sigla de Controlador Lógico Programável. Ele ajuda a automatizar sequências e processos industriais.\n\n💡 Gostou? Salve este post para revisar depois e compartilhe com alguém que estuda elétrica!\n\n#UniversoEletrico #Eletrica #AutomacaoIndustrial #Eletricidade #ManutencaoIndustrial",
+    "approved": false,
+    "media_type": "IMAGE",
+    "format": "feed"
+  },
+  {
+    "id": "005",
+    "title": "Inversor de frequência",
+    "hook": "Como controlar a velocidade?",
+    "body": "O inversor ajusta frequência e tensão para controlar motores adequados.",
+    "caption": "⚡ Como controlar a velocidade?\n\nInversores de frequência possibilitam variar a velocidade de muitos motores CA. Sua aplicação depende do tipo de motor e do projeto.\n\n💡 Gostou? Salve este post para revisar depois e compartilhe com alguém que estuda elétrica!\n\n#UniversoEletrico #Eletrica #AutomacaoIndustrial #Eletricidade #ManutencaoIndustrial",
+    "approved": false,
+    "media_type": "IMAGE",
+    "format": "feed"
+  },
+  {
+    "id": "006",
+    "title": "Motor trifásico",
+    "hook": "Por que três fases?",
+    "body": "A alimentação trifásica cria um campo magnético girante em motores de indução.",
+    "caption": "⚡ Por que três fases?\n\nMotores trifásicos são muito usados na indústria pela robustez e pela adequação a aplicações de diferentes potências.\n\n💡 Gostou? Salve este post para revisar depois e compartilhe com alguém que estuda elétrica!\n\n#UniversoEletrico #Eletrica #AutomacaoIndustrial #Eletricidade #ManutencaoIndustrial",
+    "approved": false,
+    "media_type": "IMAGE",
+    "format": "feed"
+  },
+  {
+    "id": "007",
+    "title": "Encoder",
+    "hook": "Como a máquina sabe a posição?",
+    "body": "Encoders fornecem sinais relacionados ao movimento, à posição ou à velocidade.",
+    "caption": "⚡ Como a máquina sabe a posição?\n\nEncoders ajudam no acompanhamento de eixos e transportadores. Conforme o tipo, fornecem posição incremental ou absoluta.\n\n💡 Gostou? Salve este post para revisar depois e compartilhe com alguém que estuda elétrica!\n\n#UniversoEletrico #Eletrica #AutomacaoIndustrial #Eletricidade #ManutencaoIndustrial",
+    "approved": false,
+    "media_type": "IMAGE",
+    "format": "feed"
+  },
+  {
+    "id": "008",
+    "title": "Relé térmico",
+    "hook": "Quem protege o motor?",
+    "body": "O relé de sobrecarga ajuda a proteger motores contra correntes excessivas prolongadas.",
+    "caption": "⚡ Quem protege o motor?\n\nO relé de sobrecarga é associado à proteção de motores. Sua função é diferente da proteção contra curto-circuito.\n\n💡 Gostou? Salve este post para revisar depois e compartilhe com alguém que estuda elétrica!\n\n#UniversoEletrico #Eletrica #AutomacaoIndustrial #Eletricidade #ManutencaoIndustrial",
+    "approved": false,
+    "media_type": "IMAGE",
+    "format": "feed"
+  },
+  {
+    "id": "009",
+    "title": "Sensor capacitivo",
+    "hook": "Só detecta metal?",
+    "body": "Sensores capacitivos podem detectar materiais metálicos e não metálicos.",
+    "caption": "⚡ Só detecta metal?\n\nDependendo do ajuste e da aplicação, sensores capacitivos percebem a presença de plástico, vidro ou líquidos.\n\n💡 Gostou? Salve este post para revisar depois e compartilhe com alguém que estuda elétrica!\n\n#UniversoEletrico #Eletrica #AutomacaoIndustrial #Eletricidade #ManutencaoIndustrial",
+    "approved": false,
+    "media_type": "IMAGE",
+    "format": "feed"
+  },
+  {
+    "id": "010",
+    "title": "IHM",
+    "hook": "Operador e máquina",
+    "body": "A IHM apresenta dados e comandos de um equipamento ao operador.",
+    "caption": "⚡ Operador e máquina\n\nInterface Homem-Máquina (IHM) é a tela ou painel usado para acompanhar estados, alarmes e comandos autorizados.\n\n💡 Gostou? Salve este post para revisar depois e compartilhe com alguém que estuda elétrica!\n\n#UniversoEletrico #Eletrica #AutomacaoIndustrial #Eletricidade #ManutencaoIndustrial",
+    "approved": false,
+    "media_type": "IMAGE",
+    "format": "feed"
+  },
+  {
+    "id": "011",
+    "title": "SCADA",
+    "hook": "O que um SCADA mostra?",
+    "body": "Sistemas SCADA supervisionam processos, estados, históricos e alarmes.",
+    "caption": "⚡ O que um SCADA mostra?\n\nSCADA significa Supervisory Control And Data Acquisition: supervisão e aquisição de dados industriais.\n\n💡 Gostou? Salve este post para revisar depois e compartilhe com alguém que estuda elétrica!\n\n#UniversoEletrico #Eletrica #AutomacaoIndustrial #Eletricidade #ManutencaoIndustrial",
+    "approved": false,
+    "media_type": "IMAGE",
+    "format": "feed"
+  },
+  {
+    "id": "012",
+    "title": "Contato NA/NF",
+    "hook": "NA e NF: qual a diferença?",
+    "body": "NA significa normalmente aberto; NF, normalmente fechado.",
+    "caption": "⚡ NA e NF: qual a diferença?\n\nOs termos se referem ao estado de repouso do contato, sem acionamento. O comportamento final depende do dispositivo e da lógica.\n\n💡 Gostou? Salve este post para revisar depois e compartilhe com alguém que estuda elétrica!\n\n#UniversoEletrico #Eletrica #AutomacaoIndustrial #Eletricidade #ManutencaoIndustrial",
+    "approved": false,
+    "media_type": "IMAGE",
+    "format": "feed"
+  },
+  {
+    "id": "013",
+    "title": "PROFINET",
+    "hook": "Rede industrial em tempo real",
+    "body": "PROFINET é uma tecnologia de comunicação Ethernet industrial.",
+    "caption": "⚡ Rede industrial em tempo real\n\nPROFINET conecta equipamentos de automação e viabiliza trocas de dados industriais, incluindo aplicações com exigências de tempo.\n\n💡 Gostou? Salve este post para revisar depois e compartilhe com alguém que estuda elétrica!\n\n#UniversoEletrico #Eletrica #AutomacaoIndustrial #Eletricidade #ManutencaoIndustrial",
+    "approved": false,
+    "media_type": "IMAGE",
+    "format": "feed"
+  },
+  {
+    "id": "014",
+    "title": "PROFIBUS",
+    "hook": "A rede antes do Ethernet",
+    "body": "PROFIBUS é uma família de redes de comunicação de campo industriais.",
+    "caption": "⚡ A rede antes do Ethernet\n\nO PROFIBUS é usado para troca de dados entre controladores e dispositivos de campo. Existem diferentes variantes da tecnologia.\n\n💡 Gostou? Salve este post para revisar depois e compartilhe com alguém que estuda elétrica!\n\n#UniversoEletrico #Eletrica #AutomacaoIndustrial #Eletricidade #ManutencaoIndustrial",
+    "approved": false,
+    "media_type": "IMAGE",
+    "format": "feed"
+  },
+  {
+    "id": "015",
+    "title": "Sensores fotoelétricos",
+    "hook": "Detectar sem tocar",
+    "body": "Sensores fotoelétricos usam luz para detectar a presença de objetos.",
+    "caption": "⚡ Detectar sem tocar\n\nSensores fotoelétricos podem usar reflexão ou barreira óptica. São frequentes em contagem e detecção de peças.\n\n💡 Gostou? Salve este post para revisar depois e compartilhe com alguém que estuda elétrica!\n\n#UniversoEletrico #Eletrica #AutomacaoIndustrial #Eletricidade #ManutencaoIndustrial",
+    "approved": false,
+    "media_type": "IMAGE",
+    "format": "feed"
+  },
+  {
+    "id": "016",
+    "title": "Servo motor",
+    "hook": "Precisão no movimento",
+    "body": "Sistemas servo controlam movimento com realimentação de posição ou velocidade.",
+    "caption": "⚡ Precisão no movimento\n\nO servoacionamento combina motor, controle e feedback para atender exigências dinâmicas de posicionamento e movimento.\n\n💡 Gostou? Salve este post para revisar depois e compartilhe com alguém que estuda elétrica!\n\n#UniversoEletrico #Eletrica #AutomacaoIndustrial #Eletricidade #ManutencaoIndustrial",
+    "approved": false,
+    "media_type": "IMAGE",
+    "format": "feed"
+  },
+  {
+    "id": "017",
+    "title": "SINAMICS",
+    "hook": "O que é SINAMICS?",
+    "body": "SINAMICS é uma família de acionamentos da Siemens.",
+    "caption": "⚡ O que é SINAMICS?\n\nAcionamentos SINAMICS podem ser usados para controle de motores e eixos industriais. Modelos diferentes atendem aplicações distintas.\n\n💡 Gostou? Salve este post para revisar depois e compartilhe com alguém que estuda elétrica!\n\n#UniversoEletrico #Eletrica #AutomacaoIndustrial #Eletricidade #ManutencaoIndustrial",
+    "approved": false,
+    "media_type": "IMAGE",
+    "format": "feed"
+  },
+  {
+    "id": "018",
+    "title": "SIMOTION",
+    "hook": "Movimento sincronizado",
+    "body": "SIMOTION é uma plataforma Siemens para controle de movimento.",
+    "caption": "⚡ Movimento sincronizado\n\nO SIMOTION aparece em aplicações que exigem coordenação e sincronismo de eixos, como máquinas industriais.\n\n💡 Gostou? Salve este post para revisar depois e compartilhe com alguém que estuda elétrica!\n\n#UniversoEletrico #Eletrica #AutomacaoIndustrial #Eletricidade #ManutencaoIndustrial",
+    "approved": false,
+    "media_type": "IMAGE",
+    "format": "feed"
+  },
+  {
+    "id": "019",
+    "title": "WinCC",
+    "hook": "O que faz o WinCC?",
+    "body": "WinCC é uma plataforma Siemens para visualização e supervisão.",
+    "caption": "⚡ O que faz o WinCC?\n\nAplicações WinCC podem apresentar telas, tendências, alarmes e informações de processos. As funcionalidades dependem da versão.\n\n💡 Gostou? Salve este post para revisar depois e compartilhe com alguém que estuda elétrica!\n\n#UniversoEletrico #Eletrica #AutomacaoIndustrial #Eletricidade #ManutencaoIndustrial",
+    "approved": false,
+    "media_type": "IMAGE",
+    "format": "feed"
+  },
+  {
+    "id": "020",
+    "title": "24 Vcc",
+    "hook": "Por que tantos painéis usam 24 V?",
+    "body": "24 Vcc é comum em circuitos de controle e automação industrial.",
+    "caption": "⚡ Por que tantos painéis usam 24 V?\n\nA tensão de 24 volts em corrente contínua é muito utilizada em sensores, controladores e circuitos de comando. Cuidados e projeto adequado continuam necessários.\n\n💡 Gostou? Salve este post para revisar depois e compartilhe com alguém que estuda elétrica!\n\n#UniversoEletrico #Eletrica #AutomacaoIndustrial #Eletricidade #ManutencaoIndustrial",
+    "approved": false,
+    "media_type": "IMAGE",
+    "format": "feed"
+  },
+  {
+    "id": "021",
+    "title": "Ciclo de varredura",
+    "hook": "Como um CLP pensa?",
+    "body": "O CLP executa etapas cíclicas de leitura, processamento e atualização.",
+    "caption": "⚡ Como um CLP pensa?\n\nO ciclo de varredura é uma forma simplificada de entender como muitos CLPs operam. Há tarefas e arquiteturas com comportamentos distintos.\n\n💡 Gostou? Salve este post para revisar depois e compartilhe com alguém que estuda elétrica!\n\n#UniversoEletrico #Eletrica #AutomacaoIndustrial #Eletricidade #ManutencaoIndustrial",
+    "approved": false,
+    "media_type": "IMAGE",
+    "format": "feed"
+  },
+  {
+    "id": "022",
+    "title": "Sensor PNP/NPN",
+    "hook": "PNP ou NPN?",
+    "body": "PNP e NPN descrevem modos de chaveamento de saídas de sensores.",
+    "caption": "⚡ PNP ou NPN?\n\nA escolha entre sensores PNP e NPN depende das características das entradas do sistema e das especificações dos equipamentos.\n\n💡 Gostou? Salve este post para revisar depois e compartilhe com alguém que estuda elétrica!\n\n#UniversoEletrico #Eletrica #AutomacaoIndustrial #Eletricidade #ManutencaoIndustrial",
+    "approved": false,
+    "media_type": "IMAGE",
+    "format": "feed"
+  },
+  {
+    "id": "023",
+    "title": "PID",
+    "hook": "O que significa PID?",
+    "body": "PID combina ações proporcional, integral e derivativa no controle de processos.",
+    "caption": "⚡ O que significa PID?\n\nControladores PID são aplicados em variáveis como temperatura, pressão e velocidade. Ajustes exigem análise do processo.\n\n💡 Gostou? Salve este post para revisar depois e compartilhe com alguém que estuda elétrica!\n\n#UniversoEletrico #Eletrica #AutomacaoIndustrial #Eletricidade #ManutencaoIndustrial",
+    "approved": false,
+    "media_type": "IMAGE",
+    "format": "feed"
+  },
+  {
+    "id": "024",
+    "title": "Falha e alarme",
+    "hook": "Alarme não é diagnóstico completo",
+    "body": "O alarme sinaliza uma condição; o diagnóstico investiga sua origem.",
+    "caption": "⚡ Alarme não é diagnóstico completo\n\nEm manutenção, a mensagem de alarme é uma pista. Histórico, documentação e procedimentos autorizados ajudam na análise segura.\n\n💡 Gostou? Salve este post para revisar depois e compartilhe com alguém que estuda elétrica!\n\n#UniversoEletrico #Eletrica #AutomacaoIndustrial #Eletricidade #ManutencaoIndustrial",
+    "approved": false,
+    "media_type": "IMAGE",
+    "format": "feed"
+  },
+  {
+    "id": "025",
+    "title": "Manutenção preventiva",
+    "hook": "Antes que a máquina pare",
+    "body": "Manutenção preventiva segue um plano para reduzir falhas e indisponibilidades.",
+    "caption": "⚡ Antes que a máquina pare\n\nUma boa estratégia combina inspeções planejadas, indicadores e recomendações do fabricante, sempre executadas por pessoal habilitado.\n\n💡 Gostou? Salve este post para revisar depois e compartilhe com alguém que estuda elétrica!\n\n#UniversoEletrico #Eletrica #AutomacaoIndustrial #Eletricidade #ManutencaoIndustrial",
+    "approved": false,
+    "media_type": "IMAGE",
+    "format": "feed"
+  },
+  {
+    "id": "026",
+    "title": "Fibra óptica",
+    "hook": "Dados pela luz",
+    "body": "A fibra óptica transporta informação por sinais luminosos.",
+    "caption": "⚡ Dados pela luz\n\nNa indústria, a fibra pode ajudar em enlaces de comunicação com boa imunidade a interferências eletromagnéticas.\n\n💡 Gostou? Salve este post para revisar depois e compartilhe com alguém que estuda elétrica!\n\n#UniversoEletrico #Eletrica #AutomacaoIndustrial #Eletricidade #ManutencaoIndustrial",
+    "approved": false,
+    "media_type": "IMAGE",
+    "format": "feed"
+  },
+  {
+    "id": "027",
+    "title": "Motor x gerador",
+    "hook": "Qual a diferença?",
+    "body": "O motor transforma energia elétrica em mecânica; o gerador realiza o caminho inverso.",
+    "caption": "⚡ Qual a diferença?\n\nMotores e geradores são conversores de energia. Os detalhes dependem da tecnologia e do regime de operação.\n\n💡 Gostou? Salve este post para revisar depois e compartilhe com alguém que estuda elétrica!\n\n#UniversoEletrico #Eletrica #AutomacaoIndustrial #Eletricidade #ManutencaoIndustrial",
+    "approved": false,
+    "media_type": "IMAGE",
+    "format": "feed"
+  },
+  {
+    "id": "028",
+    "title": "Sinal analógico",
+    "hook": "Digital ou analógico?",
+    "body": "Um sinal analógico varia continuamente; o digital usa estados ou valores discretos.",
+    "caption": "⚡ Digital ou analógico?\n\nEm automação, sensores e controladores trabalham com informações analógicas e digitais, conforme a variável monitorada.\n\n💡 Gostou? Salve este post para revisar depois e compartilhe com alguém que estuda elétrica!\n\n#UniversoEletrico #Eletrica #AutomacaoIndustrial #Eletricidade #ManutencaoIndustrial",
+    "approved": false,
+    "media_type": "IMAGE",
+    "format": "feed"
+  },
+  {
+    "id": "029",
+    "title": "Segurança industrial",
+    "hook": "Segurança vem antes da produção",
+    "body": "Intervenções elétricas exigem procedimento, isolamento de energia e profissionais habilitados.",
+    "caption": "⚡ Segurança vem antes da produção\n\nA segurança elétrica depende de avaliação de riscos, procedimentos da empresa e profissionais capacitados. Nunca improvise intervenções em equipamentos energizados.\n\n💡 Gostou? Salve este post para revisar depois e compartilhe com alguém que estuda elétrica!\n\n#UniversoEletrico #Eletrica #AutomacaoIndustrial #Eletricidade #ManutencaoIndustrial",
+    "approved": false,
+    "media_type": "IMAGE",
+    "format": "feed"
+  },
+  {
+    "id": "030",
+    "title": "Robótica industrial",
+    "hook": "Como o robô sabe o destino?",
+    "body": "Controladores combinam programas, sensores e referências de movimento.",
+    "caption": "⚡ Como o robô sabe o destino?\n\nRobôs industriais são integrados a sistemas de controle para movimentar peças de forma coordenada, conforme projeto e sistemas de segurança.\n\n💡 Gostou? Salve este post para revisar depois e compartilhe com alguém que estuda elétrica!\n\n#UniversoEletrico #Eletrica #AutomacaoIndustrial #Eletricidade #ManutencaoIndustrial",
+    "approved": false,
+    "media_type": "IMAGE",
+    "format": "feed"
+  }
+]
