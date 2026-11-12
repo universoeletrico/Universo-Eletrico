@@ -8,6 +8,7 @@ on:
 permissions:
   contents: write
 
+# Publicacao somente com autorizacao explicita em PUBLISH_ENABLED.
 concurrency:
   group: instagram-universo-eletrico
   cancel-in-progress: false
