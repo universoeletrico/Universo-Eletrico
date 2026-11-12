@@ -152,7 +152,8 @@ class TestPainel(unittest.TestCase):
 
     def test_lista_lote_mostra_so_rascunhos(self):
         self.authorize()
-        with patch.object(studio, "repo_json", side_effect=[self.posts, self.state]):
+        state = {"published": [{"id": "002"}], "externally_scheduled": []}
+        with patch.object(studio, "repo_json", side_effect=[self.posts, state]):
             result = self.client.get("/aprovacao-lote")
         self.assertEqual(result.status_code, 200)
         self.assertIn(b"Contator", result.data)
