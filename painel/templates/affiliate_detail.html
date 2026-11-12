@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}{{ product.id }} · Afiliados · Universo Elétrico{% endblock %}
+{% block content %}
+<div class="eyebrow">AFILIADOS / REVISÃO DE CAMPANHA</div>
+<div class="heading-row">
+  <div><h1>{{ product.name }}</h1><p>{{ product.id }} · {{ marketplace_name(product.marketplace) }} · {{ product.category }}</p></div>
+  <a class="button outline" href="{{ url_for('affiliates_page') }}">← Voltar ao catálogo</a>
+</div>
+<div class="affiliate-layout">
+  <section class="editor-card affiliate-editor">
+    <div class="preview-label"><span>INFORMAÇÕES DO PRODUTO E LEGENDA</span><span class="status {{ 'approved' if product.status == 'approved' else 'published' if product.status == 'rejected' else 'draft' }}">{{ 'Aprovado' if product.status == 'approved' else 'Rejeitado' if product.status == 'rejected' else 'Em revisão' }}</span></div>
+    <form method="post" action="{{ url_for('affiliate_detail', pid=product.id) }}" class="affiliate-form">
+      <input type="hidden" name="csrf" value="{{ csrf() }}">
+      <label>Nome do produto
+        <input type="text" name="name" maxlength="150" minlength="6" value="{{ product.name }}" required>
+      </label>
+      <div class="affiliate-field-row">
+        <label>Marketplace
+          <select name="marketplace">
+          {% for slug, marketplace in marketplaces.items() %}
+          <option value="{{ slug }}" {{ 'selected' if slug == product.marketplace else '' }}>{{ marketplace.name }}</option>
+          {% endfor %}
+          </select>
+        </label>
+        <label>Categoria
+          <select name="category">
+          {% for category in categories %}
+          <option value="{{ category }}" {{ 'selected' if category == product.category else '' }}>{{ category }}</option>
+          {% endfor %}
+          </select>
+        </label>
+      </div>
+      <label>Link de afiliado (gerado pelo marketplace)
+        <input name="affiliate_url" type="url" maxlength="1200" value="{{ product.affiliate_url }}" required>
+      </label>
+      <label>Observações e dados a verificar
+        <textarea name="description" rows="3" maxlength="700">{{ product.description }}</textarea>
+      </label>
+      <label>Legenda para campanha — revise antes de aprovar
+        <textarea name="caption" rows="13" maxlength="2000" required>{{ product.caption }}</textarea>
+      </label>
+      <div class="safety-note">O texto inicial é um modelo editorial, não uma descrição técnica validada por IA. Confira as especificações no anúncio oficial e mantenha a identificação publicitária.</div>
+      {% if writable %}
+      <div class="affiliate-actions">
+        <button class="button primary" name="action" value="save" type="submit">Salvar alterações (volta para revisão)</button>
+        <button class="button outline" name="action" value="regenerate" type="submit">Recriar legenda-modelo</button>
+      </div>
+      {% endif %}
+    </form>
+  </section>
+  <aside class="affiliate-side">
+    <div class="editor-card">
+      <div class="preview-label"><span>STATUS DA RECOMENDAÇÃO</span><span>{{ product.id }}</span></div>
+      <p class="affiliate-help">Aprovar libera o produto somente na vitrine pública. Nenhuma arte é publicada no Instagram por esta ação.</p>
+      <a class="button outline full" href="{{ product.affiliate_url }}" target="_blank" rel="noopener noreferrer nofollow sponsored">Conferir anúncio oficial ↗</a>
+      {% if writable %}
+      <form method="post" action="{{ url_for('affiliate_detail', pid=product.id) }}" class="affiliate-confirm">
+        <input type="hidden" name="csrf" value="{{ csrf() }}">
+        <label class="affiliate-check">
+          <input type="checkbox" name="reviewed" value="yes" required>
+          <span>Conferi o anúncio, a legenda, o link e a identificação publicitária. Quero tornar esta recomendação pública.</span>
+        </label>
+        <button name="action" value="approve" class="button primary full" type="submit">Aprovar e mostrar na vitrine</button>
+      </form>
+      <form method="post" action="{{ url_for('affiliate_detail', pid=product.id) }}" class="affiliate-actions-secondary">
+        <input type="hidden" name="csrf" value="{{ csrf() }}">
+        <button name="action" value="draft" type="submit" class="button outline">Voltar para revisão</button>
+        <button name="action" value="reject" type="submit" class="button outline">Rejeitar / retirar</button>
+      </form>
+      {% endif %}
+    </div>
+    <div class="editor-card">
+      <div class="preview-label"><span>PRÉVIA DA VITRINE</span><span>Link público</span></div>
+      <h3>{{ product.name }}</h3>
+      <p class="affiliate-help">{{ product.description or 'Descrição não preenchida. Confira as informações no anúncio.' }}</p>
+      <p class="affiliate-disclosure">Publicidade · Link de afiliado</p>
+      <a class="review-link" href="{{ url_for('affiliate_storefront') }}" target="_blank" rel="noopener noreferrer">Abrir vitrine →</a>
+      <p class="safety-note">Se você modificar um item aprovado, ele sai da vitrine até uma nova aprovação.</p>
+    </div>
+  </aside>
+</div>
+{% endblock %}
