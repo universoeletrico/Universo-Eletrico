@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Biblioteca de artes · Universo Elétrico{% endblock %}
+{% block content %}
+<div class="heading-row">
+  <div><div class="eyebrow">VISÃO GERAL / BIBLIOTECA</div><h1>Central de conteúdos <span class="bolt">⚡</span></h1><p>Gerencie as artes que alimentam o robô do Universo Elétrico.</p></div>
+  <div class="pill">● Ambiente de validação</div>
+</div>
+<section class="metrics">
+  <div class="metric"><small>Total de artes</small><strong>{{ total }}</strong><span>Biblioteca atual</span></div>
+  <div class="metric"><small>Aguardando revisão</small><strong>{{ totals.draft }}</strong><span>Não serão publicadas</span></div>
+  <div class="metric"><small>Aprovadas na fila</small><strong>{{ totals.approved }}</strong><span>Prontas para o robô</span></div>
+  <div class="metric"><small>Registradas como publicadas</small><strong>{{ totals.published }}</strong><span>Histórico do GitHub</span></div>
+</section>
+<section class="section-head"><div><h2>Biblioteca de artes</h2><p>Revise o visual, leia a legenda e organize a fila.</p></div><span class="result-count">{{ posts|length }} resultados</span></section>
+<form class="filters" method="get" action="{{ url_for('dashboard') }}">
+  <input type="search" name="q" value="{{ q }}" placeholder="Buscar por assunto, tema ou legenda...">
+  <select name="status" aria-label="Filtrar por situação">
+    {% for value, label in [('all','Todos os status'),('draft','Aguardando revisão'),('approved','Aprovados'),('scheduled','Agendados'),('published','Publicados')] %}
+    <option value="{{ value }}" {{ 'selected' if selected == value else '' }}>{{ label }}</option>
+    {% endfor %}
+  </select>
+  <button type="submit" class="button outline">Filtrar</button>
+</form>
+<div class="gallery">
+  {% for post in posts %}
+  <a class="art-card" href="{{ url_for('detail', pid=post.id) }}">
+    <div class="art-photo"><img src="{{ post.image_url }}" alt="Arte do post {{ post.id }}: {{ post.title }}" loading="lazy"></div>
+    <div class="art-card-body">
+      <div class="row-top"><span class="code">POST {{ post.id }}</span><span class="status {{ post.status_key }}">{{ post.status_label }}</span></div>
+      <h3>{{ post.title }}</h3><p>{{ post.hook }}</p>
+      <span class="review-link">Ver arte e legenda <span>→</span></span>
+    </div>
+  </a>
+  {% else %}
+  <div class="empty">Nenhuma arte encontrada. Experimente outro filtro.</div>
+  {% endfor %}
+</div>
+<div class="info-strip"><strong>Como funciona?</strong> As artes são lidas do GitHub. O robô só publica conteúdos aprovados, e a publicação automática continua controlada separadamente.</div>
+{% endblock %}
