@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Produtos recomendados pelo Universo Elétrico para estudos de elétrica e automação. Links de afiliados identificados.">
+  <meta name="theme-color" content="#0a1422">
+  <title>Indicações · Universo Elétrico</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="storefront-body">
+  <main class="storefront-shell">
+    <header class="storefront-header">
+      <div class="storefront-brand"><span class="storefront-bolt">⚡</span><div><strong>UNIVERSO ELÉTRICO</strong><small>INDICAÇÕES E MATERIAIS DE ESTUDO</small></div></div>
+      <div class="storefront-eyebrow">VITRINE DE RECOMENDAÇÕES</div>
+      <h1>Aprenda mais. Escolha com informação.</h1>
+      <p>Produtos e materiais relacionados à elétrica, eletrônica e automação. Confira sempre as características e condições do anúncio antes de comprar.</p>
+      <div class="affiliate-disclosure">Transparência: os links desta página são de afiliados. Podemos receber comissão por compras elegíveis.</div>
+    </header>
+    <section class="storefront-grid" aria-label="Produtos recomendados">
+    {% for product in products %}
+      <article class="storefront-product">
+        <span class="storefront-product-category">{{ product.category }}</span>
+        <h2>{{ product.name }}</h2>
+        <p>{{ product.description or 'Confira os detalhes e a compatibilidade no anúncio do vendedor.' }}</p>
+        <div class="storefront-marketplace">{{ marketplace_name(product.marketplace) }} · Link de afiliado</div>
+        <a href="{{ product.affiliate_url }}" class="button primary" target="_blank" rel="noopener noreferrer nofollow sponsored">Ver produto no {{ marketplace_name(product.marketplace) }} ↗</a>
+      </article>
+    {% else %}
+      <div class="storefront-empty">
+        <h2>Novas indicações em preparação ⚡</h2>
+        <p>Estamos revisando os produtos. Volte mais tarde para conferir as recomendações.</p>
+      </div>
+    {% endfor %}
+    </section>
+    <footer class="storefront-footer">Universo Elétrico · Conteúdo educativo e recomendações identificadas como publicidade. Preços e disponibilidade são definidos pelos vendedores.</footer>
+  </main>
+</body>
+</html>
