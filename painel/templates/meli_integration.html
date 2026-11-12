@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Conectar Mercado Livre · Universo Elétrico{% endblock %}
+{% block content %}
+<div class="heading-row">
+  <div>
+    <div class="eyebrow">STUDIO / INTEGRAÇÕES OFICIAIS</div>
+    <h1>Conectar Mercado Livre <span class="bolt">⚡</span></h1>
+    <p>Autorize uma aplicação de desenvolvedor para que o Radar consulte o catálogo oficial, sem compartilhar sua senha com o Studio.</p>
+  </div>
+  <a href="{{ url_for('product_radar') }}" class="button outline">← Voltar ao Radar</a>
+</div>
+<div class="meli-connect-layout">
+  <section class="editor-card meli-connection-card">
+    <div class="preview-label"><span>STATUS DA INTEGRAÇÃO</span><span>Autorização OAuth 2.0</span></div>
+    {% if details.connected %}
+      <div class="meli-status meli-ok"><strong>✓ Conta conectada</strong><p>Autorização gravada com tokens criptografados. A consulta do catálogo oficial pode ser utilizada no Radar enquanto as permissões permanecerem válidas.</p></div>
+      <div class="meli-connection-stat"><span>Identificador Mercado Livre</span><strong>{{ details.account_id }}</strong></div>
+      <p class="safety-note">O Studio renova tokens automaticamente quando necessário, usando armazenamento PostgreSQL. Links de afiliado continuam sendo gerados pela ferramenta oficial.</p>
+      <a href="{{ url_for('product_radar') }}" class="button primary">Pesquisar catálogo no Radar →</a>
+      <form action="{{ url_for('meli_disconnect') }}" method="post" class="meli-disconnect">
+        <input type="hidden" name="csrf" value="{{ csrf() }}">
+        <label><input type="checkbox" name="confirm" value="disconnect" required> Confirmo que desejo desconectar esta conta do Studio.</label>
+        <button type="submit" class="button outline">Desconectar desta plataforma</button>
+      </form>
+    {% else %}
+      <div class="meli-status meli-pending">
+        <strong>○ {{ 'Aguardando autorização da conta' if details.configured else 'Configuração inicial pendente' }}</strong>
+        <p>{{ 'A aplicação está configurada. Autorize o Mercado Livre para ativar a busca de catálogo.' if details.configured else 'Precisamos configurar a aplicação oficial e o armazenamento seguro antes de fazer a conexão.' }}</p>
+      </div>
+      {% if status_error %}<p class="notice">{{ status_error }}</p>{% endif %}
+      <form method="post" action="{{ url_for('meli_connect') }}" class="meli-connect-form">
+        <input type="hidden" name="csrf" value="{{ csrf() }}">
+        <label class="affiliate-check"><input type="checkbox" name="confirm" value="yes" required>
+          <span>Sou o titular da aplicação do Mercado Livre e autorizo a conexão apenas para consultar dados permitidos pelo programa de desenvolvedores.</span>
+        </label>
+        <button type="submit" class="button primary full" {% if not details.configured or status_error %}disabled{% endif %}>Conectar minha conta oficialmente →</button>
+      </form>
+      {% if not details.configured %}
+      <p class="safety-note">O botão será habilitado após configurar as variáveis de ambiente na Render. Nenhuma senha ou token precisa ser enviado nesta conversa.</p>
+      {% endif %}
+    {% endif %}
+  </section>
+  <aside class="meli-setup">
+    <div class="editor-card">
+      <div class="preview-label"><span>GUIA DE CONFIGURAÇÃO</span><span>Uma única vez</span></div>
+      <ol class="meli-setup-list">
+        <li>Entre no <a href="https://developers.mercadolivre.com.br/" target="_blank" rel="noopener noreferrer" class="small-link">DevCenter oficial do Mercado Livre ↗</a> usando a conta responsável pelo projeto.</li>
+        <li>Em <strong>Minhas aplicações</strong>, crie uma aplicação com nome como <strong>Universo Eletrico Studio</strong>, finalidade de consulta de produtos e permissões mínimas de leitura. Habilite o acesso offline necessário à renovação.</li>
+        <li>Ative <strong>PKCE (S256)</strong> no DevCenter e cadastre o Redirect URI HTTPS exatamente como exibido abaixo.</li>
+        <li>No serviço Universo Elétrico Studio da Render, em <strong>Environment</strong>, configure o Client ID, Client Secret, URL de PostgreSQL dedicado e chave aleatória de criptografia.</li>
+        <li>Volte a esta tela e clique em <strong>Conectar minha conta oficialmente</strong> para autorizar o acesso pelo Mercado Livre.</li>
+      </ol>
+    </div>
+    <div class="editor-card">
+      <div class="preview-label"><span>REDIRECT URI — COPIAR EXATO</span><span>HTTPS</span></div>
+      <div class="meli-callback">{{ callback_url }}</div>
+      <p class="safety-note">O endereço acima não deve ter parâmetros adicionais. Cadastre-o exatamente como aparece no DevCenter.</p>
+      <div class="preview-label"><span>RENDER / ENVIRONMENT</span><span>Segredos privados</span></div>
+      <div class="meli-env-list">
+        <code>MELI_CLIENT_ID</code>
+        <code>MELI_CLIENT_SECRET</code>
+        <code>MELI_DATABASE_URL</code>
+        <code>MELI_TOKEN_KEY</code>
+      </div>
+      <p class="safety-note">MELI_TOKEN_KEY: valor aleatório com pelo menos 32 caracteres. MELI_DATABASE_URL: PostgreSQL persistente exclusivo desta integração. Não use o banco do Financeiro em Dia. Guardar o Client Secret ou tokens no GitHub público seria inseguro.</p>
+      {% if missing %}
+      <p class="meli-missing">Ainda não configuradas: {{ missing|join(', ') }}.</p>
+      {% endif %}
+      <p class="safety-note">O PostgreSQL pode envolver custo de hospedagem. Confira o plano da Render antes de criar qualquer banco.</p>
+    </div>
+  </aside>
+</div>
+<div class="info-strip"><strong>Limite da integração:</strong> esta conexão autoriza buscas no catálogo de produtos, não gera links de afiliado nem aprova ou publica ofertas automaticamente. As recomendações continuam sujeitas à sua revisão.</div>
+{% endblock %}
