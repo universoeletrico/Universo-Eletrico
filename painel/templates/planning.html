@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Planejamento · Universo Elétrico{% endblock %}
+{% block content %}
+<div class="eyebrow">CENTRAL DE OPERAÇÕES</div><h1>Planejamento de conteúdo</h1><p class="page-lead">Veja a ordem planejada das 30 artes. As posições abaixo não representam datas de publicação confirmadas.</p>
+<div class="planning-list">
+{% for post in posts %}
+  <a href="{{ url_for('detail', pid=post.id) }}" class="planning-row">
+    <span class="number">{{ "%02d"|format(loop.index) }}</span>
+    <img src="{{ post.image_url }}" alt="" loading="lazy">
+    <span class="planning-name"><strong>{{ post.title }}</strong><small>{{ post.hook }}</small></span>
+    <span class="status {{ post.status_key }}">{{ post.status_label }}</span><span class="arrow">→</span>
+  </a>
+{% endfor %}
+</div>
+{% endblock %}
