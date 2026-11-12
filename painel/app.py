@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import base64
 import functools
+import hmac
 import json
 import os
 import secrets
@@ -44,6 +45,7 @@ from painel.affiliates import (
     new_id, normalize_product, require_disclosure, timestamp
 )
 from painel.research import editorial_ideas, search_official_catalog, search_url
+from painel import meli_oauth
 MEDIA = "https://universoeletrico.github.io/Universo-Eletrico/posts/"
 LOGO = "https://raw.githubusercontent.com/universoeletrico/Universo-Eletrico/main/assets/logo-original.png"
 _cache = {}
@@ -473,30 +475,120 @@ def save_affiliate_change(change):
 @app.get("/radar")
 @login_required
 def product_radar():
-    """Curadoria sem publicacao: sugestoes editoriais + API oficial opcional."""
+    """Curadoria sem publicacao: sugestoes editoriais + catalogo oficial opcional."""
     products = affiliate_catalog()
     approved_posts = repo_json("content/posts.json")
     ideas = editorial_ideas(products, approved_posts, limit=12)
     keyword = request.args.get("q", "").strip()[:80]
     results = []
-    api_configured = bool(os.environ.get("MELI_ACCESS_TOKEN", "").strip())
+    api_configured = meli_oauth.configured()
+    account_connected = False
     issue = None
-    if keyword and api_configured:
+    if api_configured:
         try:
-            results = search_official_catalog(
-                keyword, os.environ["MELI_ACCESS_TOKEN"].strip()
-            )
+            account_connected = meli_oauth.connection_status()["connected"]
+        except Exception as exc:
+            app.logger.warning("Status OAuth indisponivel: %s", type(exc).__name__)
+            issue = "Não foi possível consultar o status do Mercado Livre. Verifique o banco da integração."
+    if keyword and account_connected:
+        try:
+            token = meli_oauth.valid_access_token()
+            results = search_official_catalog(keyword, token)
         except (ValueError, RuntimeError, requests.RequestException) as exc:
             app.logger.warning("Pesquisa em catalogo falhou: %s", type(exc).__name__)
             issue = (str(exc) if isinstance(exc, (ValueError, RuntimeError))
                      else "Não foi possível consultar a API oficial agora.")
-    elif keyword:
-        issue = "Consulta a catálogo desativada: primeiro conecte uma aplicação oficial do Mercado Livre na Render."
+        except Exception as exc:
+            app.logger.warning("Erro na consulta OAuth: %s", type(exc).__name__)
+            issue = "Conexão temporariamente indisponível. Verifique a integração."
+    elif keyword and not account_connected and not issue:
+        issue = "Conecte primeiro sua aplicação do Mercado Livre ao Studio."
     return render_template(
         "radar.html", tab="radar", ideas=ideas, keyword=keyword,
         catalog_results=results, api_configured=api_configured,
+        account_connected=account_connected,
         catalog_error=issue, search_url=search_url
     )
+
+
+@app.get("/integracoes/mercado-livre")
+@login_required
+def meli_integration():
+    details = {"connected": False, "configured": meli_oauth.configured()}
+    status_error = None
+    if meli_oauth.configured():
+        try:
+            details = meli_oauth.connection_status()
+        except Exception as exc:
+            app.logger.warning("Status de integracao indisponivel: %s", type(exc).__name__)
+            status_error = "Não foi possível consultar a conexão. Confira as variáveis e o banco."
+    return render_template(
+        "meli_integration.html", tab="integracoes",
+        details=details, missing=meli_oauth.missing_settings(),
+        callback_url=meli_oauth.CALLBACK_URL, status_error=status_error
+    )
+
+
+@app.post("/integracoes/mercado-livre/conectar")
+@login_required
+def meli_connect():
+    validate_csrf()
+    if request.form.get("confirm") != "yes":
+        flash("Confirme que a aplicação e a conta autorizada são suas.", "error")
+        return redirect(url_for("meli_integration"))
+    try:
+        request_data = meli_oauth.create_oauth_request()
+        session["meli_oauth_state"] = request_data["state"]
+        session["meli_pkce_verifier"] = request_data["code_verifier"]
+        return redirect(request_data["url"], code=302)
+    except ValueError as exc:
+        flash(str(exc), "error")
+        return redirect(url_for("meli_integration"))
+
+
+@app.get("/integracoes/mercado-livre/callback")
+@login_required
+def meli_callback():
+    """URL fixa declarada no DevCenter; state e PKCE protegem o fluxo."""
+    expected = session.pop("meli_oauth_state", None)
+    verifier = session.pop("meli_pkce_verifier", None)
+    state = request.args.get("state", "")
+    if not expected or not verifier or not state or not hmac.compare_digest(expected, state):
+        abort(400, "Autorização inválida ou expirada. Inicie novamente pelo Studio.")
+    if request.args.get("error"):
+        flash("A autorização foi cancelada ou recusada no Mercado Livre.", "error")
+        return redirect(url_for("meli_integration"))
+    code = request.args.get("code", "")
+    if not code or len(code) > 2048:
+        abort(400, "Código de autorização inválido.")
+    try:
+        token_data = meli_oauth.token_exchange(code, verifier)
+        meli_oauth.save_tokens(token_data)
+        flash("Conta Mercado Livre conectada! Os tokens são protegidos no banco da integração.", "success")
+    except (ValueError, RuntimeError, requests.RequestException) as exc:
+        app.logger.warning("OAuth recusado: %s", type(exc).__name__)
+        flash(str(exc) if isinstance(exc, (ValueError, RuntimeError))
+              else "Falha ao contatar a API do Mercado Livre.", "error")
+    except Exception as exc:
+        app.logger.warning("Erro ao salvar OAuth: %s", type(exc).__name__)
+        flash("Autorização não concluída: confira o armazenamento da integração.", "error")
+    return redirect(url_for("meli_integration"))
+
+
+@app.post("/integracoes/mercado-livre/desconectar")
+@login_required
+def meli_disconnect():
+    validate_csrf()
+    if request.form.get("confirm") != "disconnect":
+        flash("Confirme a desconexão no formulário.", "error")
+        return redirect(url_for("meli_integration"))
+    try:
+        meli_oauth.disconnect()
+        flash("Tokens apagados do Studio. Para revogar o acesso no Mercado Livre, faça isso também no DevCenter.", "success")
+    except Exception as exc:
+        app.logger.warning("Falha de desconexao OAuth: %s", type(exc).__name__)
+        flash("Não foi possível limpar os tokens. Verifique a integração.", "error")
+    return redirect(url_for("meli_integration"))
 
 
 @app.route("/afiliados", methods=["GET", "POST"])
