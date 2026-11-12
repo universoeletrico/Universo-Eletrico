@@ -107,10 +107,26 @@ def publish_image(post, url, user_id, token, version, session, *, retries=12, sl
     return published['id']
 
 
+def manual_early_test_allowed(day, post_id):
+    """Excecao unica, estritamente para o teste manual aprovado do post 002 em 11/11."""
+    return (
+        os.getenv('MANUAL_TEST_POST_ID', '') == '002'
+        and day == '2026-11-11'
+        and post_id == '002'
+    )
+
+
 def reserve_for_day(now):
     day = now.astimezone(TZ).date().isoformat()
     posts, state = load_json(POSTS_FILE), load_json(STATE_FILE)
-    post, reason = select_next(posts, state, day)
+    # A regra geral de inicio permanece 13/11. Apenas o fluxo manual de 11/11
+    # pode reservar o post 002 antes da data. Agendamentos e duplicacoes seguem protegidos.
+    selection_state = dict(state)
+    if manual_early_test_allowed(day, '002'):
+        selection_state['not_before_date'] = day
+    post, reason = select_next(posts, selection_state, day)
+    if post and os.getenv('MANUAL_TEST_POST_ID') and post['id'] != os.getenv('MANUAL_TEST_POST_ID'):
+        raise RuntimeError('Post reservado nao corresponde ao teste manual autorizado.')
     if not post:
         print(reason)
         return None
@@ -156,7 +172,7 @@ def run(*, publish=False, reserve=False, now=None, session=None):
     if not post:
         raise RuntimeError('Post reservado nao encontrado ou perdeu aprovacao.')
     start = state.get('not_before_date')
-    if start and local_day < start:
+    if start and local_day < start and not manual_early_test_allowed(local_day, post['id']):
         raise RuntimeError(f'Publicacao antes de {start} proibida.')
     if any(e.get('date') == local_day for e in state.get('externally_scheduled', [])):
         raise RuntimeError('Data reservada para publicacao manual.')
