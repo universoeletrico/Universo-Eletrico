@@ -15,6 +15,7 @@
   <div class="metric"><small>Aprovados</small><strong>{{ stats.approved }}</strong><span>Visíveis na vitrine</span></div>
   <div class="metric"><small>Rejeitados</small><strong>{{ stats.rejected }}</strong><span>Fora de circulação</span></div>
 </div>
+<div class="radar-shortcut"><div><strong>⚡ Radar de Produtos</strong><p>Encontre pautas relacionadas à elétrica e automação e inicie novas campanhas.</p></div><a href="{{ url_for('product_radar') }}" class="button outline">Pesquisar oportunidades →</a></div>
 <div class="affiliate-layout">
   <section class="affiliate-main">
     <div class="section-head"><div><h2>Catálogo e campanhas</h2><p>Abra um produto para conferir o link, editar a legenda e aprovar.</p></div><span class="result-count">{{ products|length }} produto(s)</span></div>
@@ -47,7 +48,7 @@
       <form method="post" action="{{ url_for('affiliates_page') }}" class="affiliate-form">
         <input type="hidden" name="csrf" value="{{ csrf() }}">
         <label>Nome do produto
-          <input type="text" name="name" placeholder="Ex.: Livro de automação industrial" maxlength="150" minlength="6" required>
+          <input type="text" name="name" placeholder="Ex.: Livro de automação industrial" maxlength="150" minlength="6" value="{{ prefill_name }}" required>
         </label>
         <label>Marketplace
           <select name="marketplace" required>
@@ -59,7 +60,7 @@
         <label>Categoria
           <select name="category" required>
             {% for category in categories %}
-            <option value="{{ category }}">{{ category }}</option>
+            <option value="{{ category }}" {{ 'selected' if category == prefill_category else '' }}>{{ category }}</option>
             {% endfor %}
           </select>
         </label>
