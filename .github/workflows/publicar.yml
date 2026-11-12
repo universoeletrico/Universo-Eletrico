@@ -46,10 +46,14 @@ jobs:
         run: python src/publish_daily.py --dry-run
 
       # Primeiramente registra uma reserva no GitHub; se push falhar, NADA e enviado a Meta.
+    
       - name: Reservar conteudo antes de publicar
         if: env.PUBLISH_ENABLED == 'true'
-        run: python src/publish_daily.py --reserve
-
+        run: |
+          python src/publish_daily.py --reserve
+          if ! git diff --quiet -- content/state.json; then
+            echo "RESERVED_THIS_RUN=true" >> "$GITHUB_ENV"
+          fi
       - name: Confirmar reserva no repositorio
         if: env.PUBLISH_ENABLED == 'true'
         run: |
