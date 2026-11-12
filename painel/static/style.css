@@ -107,3 +107,30 @@
 @media(max-width:1100px){.affiliate-layout{grid-template-columns:1fr}}
 @media(max-width:700px){.storefront-grid{grid-template-columns:1fr}.storefront-shell{padding:18px 13px}.affiliate-editor{padding:16px}}
 @media(max-width:460px){.affiliate-item{padding:13px;gap:11px}.affiliate-item-icon{width:42px;height:42px;font-size:23px}.affiliate-field-row{grid-template-columns:1fr}.affiliate-actions{flex-direction:column}}
+
+/* Radar editorial de oportunidades */
+.radar-shortcut{display:flex;align-items:center;justify-content:space-between;gap:18px;border:1px solid #355c66;background:linear-gradient(105deg,#16363f,#14273a);border-radius:14px;padding:18px 20px;margin:25px 0 4px}
+.radar-shortcut strong{color:#f7d779;font-size:16px}
+.radar-shortcut p{font-size:12px;color:#aec2ce;margin:5px 0 0}
+.radar-shortcut .button{flex-shrink:0}
+.radar-note{padding:17px 20px;background:#122b39;border:1px solid #31536c;border-radius:12px;margin:20px 0}
+.radar-note strong{color:#ffe69d}
+.radar-note p{margin:6px 0 0;font-size:12px;color:#bed0dc;line-height:1.7}
+.radar-layout{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(300px,.8fr);gap:20px;align-items:start}
+.radar-main,.radar-aside{min-width:0}
+.radar-aside{display:grid;gap:18px}
+.radar-list{display:grid;gap:13px}
+.radar-item{display:flex;align-items:flex-start;gap:16px;background:#132538;border:1px solid #314759;border-radius:14px;padding:17px}
+.radar-rank{display:grid;place-items:center;flex-shrink:0;width:40px;height:40px;border-radius:12px;color:#ffd978;background:#3b3327;font-weight:800;font-size:15px}
+.radar-copy{flex:1;min-width:0}
+.radar-copy h3{font-size:17px;line-height:1.35;margin:11px 0 7px}
+.radar-copy>p{font-size:12px;line-height:1.65;color:#aabfcd;margin:0 0 12px}
+.radar-searches{display:flex;align-items:center;flex-wrap:wrap;gap:12px 16px;margin:10px 0}
+.radar-import{display:inline-flex;margin-top:5px}
+.radar-api-product{border-top:1px solid #2f4558;padding:14px 0;display:grid;gap:8px}
+.radar-api-product strong{font-size:13px;line-height:1.5}
+.radar-api-product .code{font-size:11px}
+.radar-integration{border:1px solid #68532c;border-radius:8px;background:#3d321c;color:#fce1a9;font-size:12px;padding:10px 12px}
+@media(max-width:1020px){.radar-layout{grid-template-columns:1fr}}
+@media(max-width:650px){.radar-shortcut{flex-direction:column;align-items:stretch}.radar-shortcut .button{width:100%}}
+@media(max-width:480px){.radar-item{padding:13px;gap:10px}.radar-rank{width:32px;height:32px;font-size:12px}.radar-searches{flex-direction:column;align-items:flex-start;gap:7px}}
