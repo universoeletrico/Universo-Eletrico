@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Programação · Universo Elétrico{% endblock %}
+{% block content %}
+<div class="eyebrow">CONTROLE DE PUBLICAÇÃO / CALENDÁRIO</div>
+<div class="heading-row">
+  <div><h1>Dias e horários de postagem</h1><p>Você escolhe a frequência. O robô consulta esta agenda antes de publicar.</p></div>
+  <span class="pill">{{ "● Agenda ativa" if config.enabled else "○ Agenda pausada" }}</span>
+</div>
+<div class="schedule-grid">
+  <form method="post" action="{{ url_for('agenda') }}" class="editor-card schedule-form">
+    <input type="hidden" name="csrf" value="{{ csrf() }}">
+    <div class="preview-label"><span>CONFIGURAÇÕES DA CONTA</span><span>Horário de Brasília</span></div>
+    <label class="switch-line"><input type="checkbox" name="enabled" {{ "checked" if config.enabled else "" }}>
+      <span><strong>Publicação automática ativada</strong><small>Desmarque para pausar novas postagens</small></span>
+    </label>
+    <div class="form-section">
+      <h2>1. Quais dias da semana?</h2>
+      <p>Escolha os dias em que o robô poderá publicar.</p>
+      <div class="weekday-list">
+      {% for n, label in days %}
+        <label class="weekday"><input type="checkbox" name="days" value="{{ n }}" {{ "checked" if n in config.days else "" }}><span>{{ label }}</span></label>
+      {% endfor %}
+      </div>
+    </div>
+    <div class="form-section">
+      <h2>2. Quantos posts por dia?</h2>
+      <p>O limite é de 3 publicações por dia. Só serão usadas artes aprovadas.</p>
+      <select name="quantidade" class="schedule-select" aria-label="Quantidade de posts por dia">
+        <option value="1" {{ "selected" if quantidade == 1 else "" }}>1 publicação por dia</option>
+        <option value="2" {{ "selected" if quantidade == 2 else "" }}>2 publicações por dia</option>
+        <option value="3" {{ "selected" if quantidade == 3 else "" }}>3 publicações por dia</option>
+      </select>
+    </div>
+    <div class="form-section">
+      <h2>3. Em quais horários?</h2>
+      <p>Informe os horários. Serão considerados apenas os primeiros horários até a quantidade escolhida acima. Mantenha no mínimo 1 hora de intervalo.</p>
+      <div class="time-grid">
+        {% for hora in horarios %}
+        <label>Horário {{ loop.index }}
+          <input name="time{{ loop.index }}" type="time" value="{{ hora }}" required>
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+    {% if not writable %}
+      <div class="notice"><strong>Visualização liberada, gravação pendente.</strong> Para salvar dias e horários nesta tela, precisamos configurar uma única vez o token de escrita do GitHub na Render. Depois disso você não precisará editar o GitHub.</div>
+      <button class="button primary full schedule-save" type="submit" disabled>Salvar agenda (aguardando conexão)</button>
+    {% else %}
+      <button class="button primary full schedule-save" type="submit">Salvar dias e horários →</button>
+    {% endif %}
+    <div class="safety-note">As alterações passam a valer nas próximas verificações. O GitHub pode atrasar uma execução; a janela de tolerância é de 45 minutos. Postagens já feitas ou reservadas não serão repetidas automaticamente.</div>
+  </form>
+  <aside class="schedule-summary">
+    <div class="metric schedule-overview">
+      <small>PUBLICAÇÕES PLANEJADAS</small>
+      <strong>{{ quantidade }} <span>/ dia selecionado</span></strong>
+      <p>{{ config.days|length }} dias habilitados nesta semana</p>
+      <div class="quick-times">{% for h in config.times %}<span>{{ h }}</span>{% endfor %}</div>
+    </div>
+    <div class="editor-card">
+      <div class="preview-label"><span>PRÓXIMOS DIAS E HORÁRIOS</span><span>Simulação</span></div>
+      {% for dia in proximos %}
+      <div class="agenda-line"><div><strong>{{ dia.day_name }}</strong><small>{{ dia.date }}</small></div><span>{{ dia.times|join(' · ') }}</span></div>
+      {% else %}
+        <p>Nenhuma publicação programada. A agenda está pausada ou sem dias selecionados.</p>
+      {% endfor %}
+      <div class="safety-note">Esta é uma previsão de horários, não confirmação de publicação. A fila precisa ter artes aprovadas, e agendamentos externos serão respeitados.</div>
+    </div>
+  </aside>
+</div>
+{% endblock %}
