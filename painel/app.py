@@ -43,6 +43,7 @@ from painel.affiliates import (
     CATEGORIES, IDEAS, MARKETPLACES, draft_caption, marketplace_name,
     new_id, normalize_product, require_disclosure, timestamp
 )
+from painel.research import editorial_ideas, search_official_catalog, search_url
 MEDIA = "https://universoeletrico.github.io/Universo-Eletrico/posts/"
 LOGO = "https://raw.githubusercontent.com/universoeletrico/Universo-Eletrico/main/assets/logo-original.png"
 _cache = {}
@@ -468,6 +469,36 @@ def save_affiliate_change(change):
     return result
 
 
+
+@app.get("/radar")
+@login_required
+def product_radar():
+    """Curadoria sem publicacao: sugestoes editoriais + API oficial opcional."""
+    products = affiliate_catalog()
+    approved_posts = repo_json("content/posts.json")
+    ideas = editorial_ideas(products, approved_posts, limit=12)
+    keyword = request.args.get("q", "").strip()[:80]
+    results = []
+    api_configured = bool(os.environ.get("MELI_ACCESS_TOKEN", "").strip())
+    issue = None
+    if keyword and api_configured:
+        try:
+            results = search_official_catalog(
+                keyword, os.environ["MELI_ACCESS_TOKEN"].strip()
+            )
+        except (ValueError, RuntimeError, requests.RequestException) as exc:
+            app.logger.warning("Pesquisa em catalogo falhou: %s", type(exc).__name__)
+            issue = (str(exc) if isinstance(exc, (ValueError, RuntimeError))
+                     else "Não foi possível consultar a API oficial agora.")
+    elif keyword:
+        issue = "Consulta a catálogo desativada: primeiro conecte uma aplicação oficial do Mercado Livre na Render."
+    return render_template(
+        "radar.html", tab="radar", ideas=ideas, keyword=keyword,
+        catalog_results=results, api_configured=api_configured,
+        catalog_error=issue, search_url=search_url
+    )
+
+
 @app.route("/afiliados", methods=["GET", "POST"])
 @login_required
 def affiliates_page():
@@ -509,10 +540,15 @@ def affiliates_page():
         "approved": sum(x.get("status") == "approved" for x in products),
         "rejected": sum(x.get("status") == "rejected" for x in products)
     }
+    initial_name = request.args.get("name", "").strip()[:150]
+    initial_category = request.args.get("category", "").strip()[:90]
+    if initial_category not in CATEGORIES:
+        initial_category = CATEGORIES[0]
     return render_template(
         "affiliates.html", tab="afiliados", products=products,
         stats=stats, marketplaces=MARKETPLACES,
         categories=CATEGORIES, ideas=IDEAS,
+        prefill_name=initial_name, prefill_category=initial_category,
         marketplace_name=marketplace_name
     )
 
