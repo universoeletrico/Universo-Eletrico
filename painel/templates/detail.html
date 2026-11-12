@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}{{ post.title }} · Universo Elétrico{% endblock %}
+{% block content %}
+<a class="back" href="{{ url_for('dashboard') }}">← Voltar para a biblioteca</a>
+<div class="heading-row">
+  <div><div class="eyebrow">REVISÃO DO CONTEÚDO · POST {{ post.id }}</div><h1>{{ post.title }}</h1><p>Confira a imagem e a legenda antes de liberar para a fila.</p></div>
+  <span class="status {{ post.status_key }}">{{ post.status_label }}</span>
+</div>
+<div class="detail-layout">
+  <div class="preview-card">
+    <div class="preview-label"><span>PRÉ-VISUALIZAÇÃO DA ARTE</span><span>4:5 · Feed</span></div>
+    <img src="{{ post.image_url }}" alt="Arte {{ post.title }}">
+    <a class="plain-link" target="_blank" rel="noopener noreferrer" href="{{ post.image_url }}">Abrir imagem em tamanho completo ↗</a>
+  </div>
+  <div class="editor-card">
+    <div class="preview-label"><span>TEXTO DA PUBLICAÇÃO</span><span>Instagram</span></div>
+    <h2>{{ post.hook }}</h2>
+    <p class="body-note">{{ post.body }}</p>
+    <form method="post" action="{{ url_for('save_post', pid=post.id) }}">
+      <input type="hidden" name="csrf" value="{{ csrf() }}">
+      <label for="caption">Legenda e hashtags</label>
+      <textarea id="caption" name="caption" maxlength="2200" rows="14" {{ 'readonly' if not writable or post.status_key in ['published','scheduled'] else '' }}>{{ post.caption }}</textarea>
+      {% if post.status_key == 'published' %}
+        <div class="notice">Esta publicação já consta no histórico do robô. Para evitar divergências, não pode ser reeditada por este painel.</div>
+      {% elif post.status_key == 'scheduled' %}
+        <div class="notice">Esta arte está agendada ou reservada. Alterações bloqueadas para evitar publicação incorreta.</div>
+      {% elif not writable %}
+        <div class="notice">Modo de visualização ativo. Para liberar edição e aprovação pelo painel, falta conectar uma credencial do GitHub com acesso apenas ao repositório Universo-Eletrico.</div>
+      {% else %}
+        <div class="actions">
+          <button type="submit" class="button outline" name="decision" value="draft">Salvar como rascunho</button>
+          <button type="submit" class="button primary" name="decision" value="approve">Salvar e aprovar ✓</button>
+        </div>
+      {% endif %}
+    </form>
+    <div class="safety-note">Aprovar um conteúdo não ativa o robô diário. O envio ao Instagram tem controles próprios.</div>
+  </div>
+</div>
+{% endblock %}
