@@ -1,0 +1,29 @@
+name: Validar seguranca do robo
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - '.github/workflows/publicar.yml'
+      - '.github/workflows/testes_seguranca.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Baixar arquivos
+        uses: actions/checkout@v4
+      - name: Preparar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Rodar testes locais sem acessar Meta
+        run: python -m unittest discover -s tests -v
