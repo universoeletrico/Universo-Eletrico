@@ -45,7 +45,7 @@ class TestMercadoLivreOAuth(unittest.TestCase):
 
     def test_page_without_credentials_does_not_contact_api(self):
         self.authorize()
-        with patch.dict(os.environ, {}, clear=True), \
+        with patch.dict(os.environ, {key: "" for key in meli_oauth.NECESSARY}), \
              patch.object(meli_oauth, "connection_status") as status:
             r = self.client.get("/integracoes/mercado-livre")
         self.assertEqual(r.status_code, 200)
