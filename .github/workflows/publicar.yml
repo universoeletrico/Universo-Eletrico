@@ -7,24 +7,57 @@ on:
     - cron: '17 22 * * *'
 
 permissions:
-  contents: read
+  contents: write
+
+concurrency:
+  group: instagram-universo-eletrico
+  cancel-in-progress: false
 
 jobs:
-  testar-robo:
+  publicar:
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
+    env:
+      PUBLISH_ENABLED: ${{ vars.PUBLISH_ENABLED }}
+      PUBLIC_MEDIA_BASE_URL: ${{ vars.PUBLIC_MEDIA_BASE_URL }}
+      INSTAGRAM_USER_ID: ${{ secrets.INSTAGRAM_USER_ID }}
+      INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
+      GRAPH_API_VERSION: v27.0
+
     steps:
-      - name: Baixar arquivos do projeto
+      - name: Baixar arquivos
         uses: actions/checkout@v4
+        with:
+          persist-credentials: true
 
       - name: Configurar Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.12'
 
-      - name: Executar testes do robo
+      - name: Instalar dependencias
+        run: pip install -r requirements-publish.txt
+
+      - name: Testar o robo
         run: python -m unittest discover -s tests -v
 
-      - name: Simular proxima publicacao
+      - name: Simular publicacao
+        if: env.PUBLISH_ENABLED != 'true'
         run: python src/publish_daily.py --dry-run
+
+      - name: Publicar conteudo aprovado
+        if: env.PUBLISH_ENABLED == 'true'
+        run: python src/publish_daily.py --publish
+
+      - name: Registrar publicacao
+        if: env.PUBLISH_ENABLED == 'true'
+        run: |
+          if ! git diff --quiet -- content/state.json; then
+            git config user.name 'universo-eletrico-bot'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add content/state.json
+            git commit -m 'Registrar publicacao diaria'
+            git push
+          fi
+
