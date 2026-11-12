@@ -2,3 +2,22 @@
 @media(max-width:1200px){.gallery{grid-template-columns:repeat(3,minmax(0,1fr))}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:800px){.shell{display:block}.sidebar{position:relative;width:100%;height:auto;padding:16px;display:block;border-right:0;border-bottom:1px solid var(--line)}.brand{padding-bottom:12px}.workspace-label,.client-card,.nav-title,.sidebar-bottom{display:none}.nav-list{display:flex;gap:4px;overflow:auto}.nav-list a{white-space:nowrap;padding:8px 11px;font-size:12px}.nav-list a span{display:none}.topbar{height:48px;padding:0 20px}.content{padding:26px 18px 50px}.heading-row{align-items:flex-start;flex-direction:column}.gallery{grid-template-columns:repeat(2,minmax(0,1fr))}.detail-layout{grid-template-columns:1fr}.feature-grid{grid-template-columns:1fr}}
 @media(max-width:520px){.gallery{gap:10px}.art-card-body{padding:12px 10px}.art-card h3{font-size:13px}.art-card p{font-size:11px}.status{font-size:9px;padding:5px}.metrics{gap:9px}.metric{padding:15px;min-height:125px}.metric strong{font-size:27px}.filters{flex-wrap:wrap}.filters input{flex-basis:100%}.filters select{flex:1}.heading-row h1{font-size:28px}.topbar-right{font-size:10px}.planning-row{padding:12px 9px;gap:8px}.login-panel{padding:28px 22px}}
+
+/* Agenda editavel — fase Universo Eletrico */
+.schedule-grid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(280px,.85fr);gap:24px;align-items:start}
+.schedule-form{padding:27px}.schedule-form h2{font-size:17px;margin:0 0 7px}.schedule-form p{margin:0 0 16px;font-size:13px}
+.switch-line{display:flex!important;align-items:center;gap:13px;background:#183d35;border:1px solid #2f6455;border-radius:12px;padding:15px;margin:24px 0 7px!important;cursor:pointer}
+.switch-line input{width:19px;height:19px;accent-color:#ffcc45}
+.switch-line span{display:grid;gap:4px}.switch-line small{font-size:12px;color:#a7d9cf}
+.form-section{border-top:1px solid var(--line);padding-top:23px;margin-top:23px}
+.weekday-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.weekday{margin:0!important;display:flex!important;align-items:center;gap:9px;background:#0d1b2b;border:1px solid #35485b;padding:12px 14px;border-radius:9px;cursor:pointer}
+.weekday input{accent-color:#ffcc45;width:16px;height:16px}
+.schedule-select,.time-grid input{width:100%;background:#0b1827;border:1px solid #35485b;color:var(--text);padding:12px;border-radius:9px}
+.time-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px}
+.time-grid label{display:block;margin:0!important;font-size:12px;color:var(--muted)}
+.time-grid input{display:block;margin-top:8px;min-width:0;font-weight:700}
+.schedule-save{width:100%;margin-top:23px}.schedule-save:disabled{opacity:.48;cursor:not-allowed}
+.schedule-summary{display:grid;gap:18px}.schedule-overview{min-height:160px}.schedule-overview strong span{font-size:14px;color:var(--muted);letter-spacing:0}.schedule-overview p{font-size:12px;margin:4px 0 14px}.quick-times{display:flex;flex-wrap:wrap;gap:8px}.quick-times span{border:1px solid #386a70;border-radius:7px;padding:6px 9px;color:#9be5db;background:#123b40;font-weight:700}
+.agenda-line{display:flex;justify-content:space-between;gap:8px;align-items:center;border-bottom:1px solid var(--line);padding:14px 0;font-size:12px}.agenda-line div{display:grid;gap:4px}.agenda-line small{color:var(--muted)}.agenda-line>span{color:var(--yellow);font-weight:700;white-space:nowrap}
+@media(max-width:1000px){.schedule-grid{grid-template-columns:1fr}}@media(max-width:550px){.time-grid{grid-template-columns:1fr}.weekday-list{grid-template-columns:repeat(2,minmax(0,1fr))}.schedule-form{padding:17px}}
