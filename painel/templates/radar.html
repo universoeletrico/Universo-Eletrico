@@ -45,24 +45,25 @@
   <aside class="radar-aside">
     <div class="editor-card">
       <div class="preview-label"><span>BUSCA NO CATÁLOGO OFICIAL</span><span>Mercado Livre</span></div>
-      {% if api_configured %}
-        <p class="affiliate-help">A conexão de consulta está configurada. Pesquise um termo para ver produtos do catálogo oficial. O catálogo não informa necessariamente ofertas ou comissões.</p>
+      {% if account_connected %}
+        <p class="affiliate-help">Conta conectada oficialmente! Pesquise um termo para ver produtos do catálogo. O catálogo não informa necessariamente ofertas ou comissões.</p>
       {% else %}
-        <p class="affiliate-help">A API oficial do Mercado Livre ainda não foi conectada. Quando configurarmos uma aplicação autorizada, esta caixa permitirá consultar o catálogo por palavra-chave.</p>
-        <div class="radar-integration">Integração de catálogo: ainda não configurada</div>
+        <p class="affiliate-help">A consulta de catálogo ainda precisa de uma aplicação oficial do Mercado Livre e de autorização OAuth.</p>
+        <div class="radar-integration">Integração de catálogo: aguardando conexão segura</div>
       {% endif %}
+      <a class="button outline full radar-connect-btn" href="{{ url_for('meli_integration') }}">Configurar conexão oficial →</a>
       <form action="{{ url_for('product_radar') }}" method="get" class="affiliate-form">
         <label>Pesquisar produtos por tema
           <input type="search" name="q" value="{{ keyword }}" minlength="3" maxlength="70" placeholder="Ex.: kit Arduino">
         </label>
-        <button class="button primary full" type="submit" {% if not api_configured %}disabled{% endif %}>Consultar catálogo oficial</button>
+        <button class="button primary full" type="submit" {% if not account_connected %}disabled{% endif %}>Consultar catálogo oficial</button>
       </form>
       {% if catalog_error %}
         <p class="notice">{{ catalog_error }}</p>
       {% endif %}
-      <p class="safety-note">A consulta requer credencial da aplicação de desenvolvedor, armazenada somente na Render. Não use seu token de afiliado ou senha da conta aqui.</p>
+      <p class="safety-note">A consulta usa autorização OAuth e tokens criptografados num banco persistente, separado dos seus projetos. Nunca coloque senhas ou tokens de afiliado no formulário.</p>
     </div>
-    {% if keyword and api_configured %}
+    {% if keyword and account_connected %}
     <div class="editor-card">
       <div class="preview-label"><span>RESULTADOS DO CATÁLOGO</span><span>{{ catalog_results|length }}</span></div>
       <p class="affiliate-help">Produtos cadastrados no catálogo, não anúncios com preço e estoque confirmados. Gere o link de afiliado oficialmente antes de divulgar.</p>
