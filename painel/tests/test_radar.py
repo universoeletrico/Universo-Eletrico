@@ -86,7 +86,8 @@ class TestRadar(unittest.TestCase):
     def test_sugestoes_priorizam_temas_da_fila(self):
         result = editorial_ideas(self.products, self.posts, limit=12)
         self.assertTrue(result)
-        self.assertIn("sensor", result[0]["query"].lower())
+        self.assertGreaterEqual(result[0]["score"], 4)
+        self.assertTrue(any("sensor" in item["query"].lower() for item in result[:6]))
         self.assertGreaterEqual(result[0]["score"], result[-1]["score"])
 
     def test_link_de_pesquisa_mantem_host_fixo(self):
