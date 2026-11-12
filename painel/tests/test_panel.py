@@ -59,7 +59,7 @@ class TestPainel(unittest.TestCase):
             response = self.client.get("/post/002")
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Legenda de disjuntores", response.data)
-        self.assertIn(b"publicado", response.data)
+        self.assertIn(b'class="status published"', response.data)
 
     def test_status_nao_pode_ser_editado_sem_csrf(self):
         self.authorize()
