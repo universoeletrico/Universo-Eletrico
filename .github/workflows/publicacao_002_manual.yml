@@ -1,0 +1,95 @@
+name: Publicar post 002 - teste unico
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmacao:
+        description: "Para publicar de verdade o post 002, digite PUBLICAR-002"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: instagram-universo-eletrico
+  cancel-in-progress: false
+
+jobs:
+  publicar-002:
+    if: ${{ inputs.confirmacao == 'PUBLICAR-002' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    env:
+      PUBLISH_ENABLED: 'true'
+      MANUAL_TEST_POST_ID: '002'
+      PUBLIC_MEDIA_BASE_URL: ${{ vars.PUBLIC_MEDIA_BASE_URL }}
+      INSTAGRAM_USER_ID: ${{ secrets.INSTAGRAM_USER_ID }}
+      INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
+      GRAPH_API_VERSION: v27.0
+
+    steps:
+      - name: Baixar repositorio
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Preparar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Instalar dependencias
+        run: pip install -r requirements-publish.txt
+
+      - name: Confirmar dia e post permitido
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from datetime import datetime
+          from zoneinfo import ZoneInfo
+
+          today = datetime.now(ZoneInfo('America/Sao_Paulo')).date().isoformat()
+          if today != '2026-11-11':
+              raise SystemExit('Teste antecipado autorizado apenas para 11/11. Nenhuma publicacao enviada.')
+          posts = json.loads(Path('content/posts.json').read_text(encoding='utf-8'))
+          post = next((p for p in posts if p['id'] == '002'), None)
+          if not post or not post.get('approved') or post.get('media_type') != 'IMAGE':
+              raise SystemExit('Post 002 nao aprovado ou formato inesperado.')
+          if not Path('docs/posts/002.jpg').is_file():
+              raise SystemExit('Imagem do post 002 nao encontrada.')
+          print('Teste manual autorizado para uma unica publicacao do post 002.')
+          PY
+
+      - name: Executar testes offline
+        run: python -m unittest discover -s tests -v
+
+      - name: Reservar post 002 antes do envio
+        run: python src/publish_daily.py --reserve
+
+      - name: Persistir reserva antes de comunicar com a Meta
+        run: |
+          if git diff --quiet -- content/state.json; then
+            echo "Nenhuma nova reserva criada. Publicacao bloqueada."
+            exit 1
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add content/state.json
+          git commit -m 'Reservar post 002 para teste controlado'
+          git push
+
+      - name: Publicar somente o post 002 reservado
+        run: python src/publish_daily.py --publish
+
+      - name: Salvar comprovante de publicacao
+        run: |
+          if git diff --quiet -- content/state.json; then
+            echo "Meta nao gerou alteracao confirmada no historico."
+            exit 1
+          fi
+          git add content/state.json
+          git commit -m 'Registrar primeira publicacao via API Instagram'
+          git push
