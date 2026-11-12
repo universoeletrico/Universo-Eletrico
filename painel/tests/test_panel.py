@@ -68,6 +68,40 @@ class TestPainel(unittest.TestCase):
         })
         self.assertEqual(response.status_code, 400)
 
+    def test_agenda_exibe_dias_e_horarios(self):
+        self.authorize()
+        cfg = {"timezone": "America/Sao_Paulo", "enabled": True,
+               "days": [0, 2, 4], "times": ["12:17", "19:17"]}
+        with patch.object(studio, "repo_json", return_value=cfg):
+            response = self.client.get("/agenda")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Program", response.data)
+        self.assertIn(b"19:17", response.data)
+
+    def test_agenda_pode_salvar_sem_token_em_modo_simulado(self):
+        self.authorize()
+        with patch.object(studio, "save_schedule_to_github") as salvar:
+            response = self.client.post("/agenda", data={
+                "csrf": "teste-csrf",
+                "enabled": "on", "days": ["0", "2", "4"],
+                "quantidade": "2", "time1": "12:17", "time2": "19:17"
+            })
+        self.assertEqual(response.status_code, 302)
+        salvar.assert_called_once()
+        cfg = salvar.call_args.args[0]
+        self.assertEqual(cfg["days"], [0, 2, 4])
+        self.assertEqual(cfg["times"], ["12:17", "19:17"])
+
+    def test_agenda_rejeita_horarios_iguais(self):
+        self.authorize()
+        with patch.object(studio, "save_schedule_to_github") as salvar:
+            response = self.client.post("/agenda", data={
+                "csrf": "teste-csrf", "enabled": "on", "days": ["0"],
+                "quantidade": "2", "time1": "19:17", "time2": "19:17"
+            })
+        self.assertEqual(response.status_code, 302)
+        salvar.assert_not_called()
+
     def test_saude_geral(self):
         self.assertTrue(self.client.get("/health").json["ok"])
 
