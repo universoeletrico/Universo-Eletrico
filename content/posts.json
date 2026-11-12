@@ -15,7 +15,7 @@
     "hook": "Disjuntor ou fusível?",
     "body": "Ambos ajudam na proteção, mas seu modo de atuação e rearme são diferentes.",
     "caption": "⚡ Disjuntor ou fusível?\n\nO fusível interrompe o circuito quando seu elemento interno atua; normalmente precisa ser substituído. O disjuntor pode ser rearmado após identificar e resolver a causa do disparo.\n\n💡 Gostou? Salve este post para revisar depois e compartilhe com alguém que estuda elétrica!\n\n#UniversoEletrico #Eletrica #AutomacaoIndustrial #Eletricidade #ManutencaoIndustrial",
-    "approved": false,
+    "approved": true,
     "media_type": "IMAGE",
     "format": "feed"
   },
