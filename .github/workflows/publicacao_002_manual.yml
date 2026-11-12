@@ -52,8 +52,8 @@ jobs:
           from zoneinfo import ZoneInfo
 
           today = datetime.now(ZoneInfo('America/Sao_Paulo')).date().isoformat()
-          if today != '2026-11-11':
-              raise SystemExit('Teste antecipado autorizado apenas para 11/11. Nenhuma publicacao enviada.')
+          if today not in {'2026-11-11', '2026-11-13'}:
+              raise SystemExit('Teste autorizado somente em 11/11 ou 13/11. Nenhuma publicacao enviada.')
           posts = json.loads(Path('content/posts.json').read_text(encoding='utf-8'))
           post = next((p for p in posts if p['id'] == '002'), None)
           if not post or not post.get('approved') or post.get('media_type') != 'IMAGE':
