@@ -1,0 +1,13 @@
+{
+  "timezone": "America/Sao_Paulo",
+  "days": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+  ],
+  "posts_per_day": 1
+}
