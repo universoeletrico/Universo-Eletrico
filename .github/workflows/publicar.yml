@@ -1,4 +1,3 @@
-
 name: Universo Eletrico - Robo Diario
 
 on:
@@ -46,18 +45,32 @@ jobs:
         if: env.PUBLISH_ENABLED != 'true'
         run: python src/publish_daily.py --dry-run
 
-      - name: Publicar conteudo aprovado
+      # Primeiramente registra uma reserva no GitHub; se push falhar, NADA e enviado a Meta.
+      - name: Reservar conteudo antes de publicar
         if: env.PUBLISH_ENABLED == 'true'
-        run: python src/publish_daily.py --publish
+        run: python src/publish_daily.py --reserve
 
-      - name: Registrar publicacao
+      - name: Confirmar reserva no repositorio
         if: env.PUBLISH_ENABLED == 'true'
         run: |
           if ! git diff --quiet -- content/state.json; then
-            git config user.name 'universo-eletrico-bot'
+            git config user.name 'github-actions[bot]'
             git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
             git add content/state.json
-            git commit -m 'Registrar publicacao diaria'
+            git commit -m 'Reservar post para publicacao'
+            git push
+          fi
+
+      - name: Publicar somente post reservado
+        if: env.PUBLISH_ENABLED == 'true'
+        run: python src/publish_daily.py --publish
+
+      - name: Registrar publicacao confirmada
+        if: env.PUBLISH_ENABLED == 'true'
+        run: |
+          if ! git diff --quiet -- content/state.json; then
+            git add content/state.json
+            git commit -m 'Registrar publicacao confirmada'
             git push
           fi
 
