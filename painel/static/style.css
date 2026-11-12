@@ -134,3 +134,27 @@
 @media(max-width:1020px){.radar-layout{grid-template-columns:1fr}}
 @media(max-width:650px){.radar-shortcut{flex-direction:column;align-items:stretch}.radar-shortcut .button{width:100%}}
 @media(max-width:480px){.radar-item{padding:13px;gap:10px}.radar-rank{width:32px;height:32px;font-size:12px}.radar-searches{flex-direction:column;align-items:flex-start;gap:7px}}
+
+/* Integração oficial Mercado Livre */
+.meli-connect-layout{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(320px,.85fr);gap:22px;align-items:start;margin-top:24px}
+.meli-connect-layout>.editor-card{padding:25px}
+.meli-setup{display:grid;gap:18px;min-width:0}.meli-connection-card{min-width:0}
+.meli-status{border:1px solid #665530;background:#3b3322;padding:18px;border-radius:12px;margin:23px 0}
+.meli-status strong{font-size:16px;color:#ffe4a8}.meli-status p{color:#c7cccb;font-size:13px;line-height:1.6;margin:8px 0 0}
+.meli-ok{background:#13362e;border-color:#2c7f68}.meli-ok strong{color:#96edcc}
+.meli-connect-form{display:grid;gap:16px;margin-top:18px}
+.meli-connect-form .button{width:100%}.meli-connect-form .button:disabled{cursor:not-allowed;opacity:.5}
+.meli-connect-form .affiliate-check{display:flex;align-items:flex-start}
+.meli-connection-stat{display:flex;align-items:center;justify-content:space-between;gap:8px;border-top:1px solid #345168;border-bottom:1px solid #345168;padding:14px 0;margin:18px 0}
+.meli-connection-stat span{color:#abc1cd;font-size:12px}
+.meli-disconnect{display:grid;gap:15px;margin-top:25px;border-top:1px solid #355067;padding-top:16px}
+.meli-disconnect label{font-size:12px;line-height:1.5;color:#bbcad5}
+.meli-disconnect input{accent-color:#d6a54e}
+.meli-setup-list{padding-left:22px;display:grid;gap:13px;margin:20px 0;color:#c1d3dc;font-size:13px;line-height:1.6}
+.meli-setup-list li::marker{color:#f6d981;font-weight:800}
+.meli-callback{padding:13px;background:#0b1d2d;border:1px solid #34576c;border-radius:9px;overflow-wrap:anywhere;font-family:monospace;font-size:12px;color:#a9e4df;margin:14px 0 16px;line-height:1.6}
+.meli-env-list{display:grid;gap:7px;margin-top:12px}.meli-env-list code{padding:10px;background:#0b1a28;border:1px solid #33465d;border-radius:6px;overflow-wrap:anywhere;font-size:12px;color:#d4e7f6}
+.meli-missing{font-size:12px;padding:12px;border:1px solid #625535;border-radius:8px;color:#e7d2a3;line-height:1.6}
+.radar-connect-btn{display:inline-flex;width:100%;justify-content:center;margin:0 0 14px}
+@media(max-width:1080px){.meli-connect-layout{grid-template-columns:1fr}}
+@media(max-width:600px){.meli-connect-layout>.editor-card{padding:17px}}
