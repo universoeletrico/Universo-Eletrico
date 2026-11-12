@@ -1,0 +1,55 @@
+
+name: Verificar permissao de publicacao Instagram
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Consultar limite de publicacao
+        env:
+          IG_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
+          IG_ID: ${{ secrets.INSTAGRAM_USER_ID }}
+        run: |
+          python - <<'PY'
+          import os
+          import urllib.request
+          import urllib.error
+
+          token = os.getenv('IG_TOKEN', '').strip()
+          ig_id = os.getenv('IG_ID', '').strip()
+
+          if not token or not ig_id.isdecimal():
+              raise SystemExit('Credenciais invalidas.')
+
+          url = (
+              f'https://graph.facebook.com/v27.0/'
+              f'{ig_id}/content_publishing_limit'
+          )
+
+          req = urllib.request.Request(
+              url,
+              headers={'Authorization': f'Bearer {token}'}
+          )
+
+          try:
+              with urllib.request.urlopen(
+                  req, timeout=20
+              ) as response:
+                  response.read()
+
+              print('Consulta realizada com sucesso.')
+              print('Nenhuma publicacao enviada.')
+
+          except urllib.error.HTTPError as error:
+              raise SystemExit(
+                  f'Erro da Meta: HTTP {error.code}'
+              )
+          PY
