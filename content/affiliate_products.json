@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "products": [
+    {
+      "id": "A001",
+      "name": "Kit Uno Para Arduino Iniciante Premium Com Material Didático Completo",
+      "marketplace": "mercadolivre",
+      "category": "Arduino e eletrônica",
+      "affiliate_url": "https://meli.la/2jbidad",
+      "description": "Produto escolhido pelo administrador. Conferir o anúncio, os itens incluídos e a disponibilidade antes de divulgar.",
+      "caption": "⚡ Quer começar a estudar Arduino?\n\nConheça o Kit Uno Para Arduino Iniciante Premium Com Material Didático Completo. Compare as especificações e confira o conteúdo do anúncio para avaliar se ele atende aos seus objetivos de estudo.\n\n🔗 Link de afiliado disponível na nossa vitrine.\n\n#Publicidade #LinkDeAfiliado #UniversoEletrico #Arduino #Automacao",
+      "status": "draft",
+      "created_at": "2026-11-12",
+      "updated_at": "2026-11-12"
+    }
+  ]
+}
