@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Aprovação em lote · Universo Elétrico{% endblock %}
+{% block content %}
+<div class="heading-row">
+  <div>
+    <div class="eyebrow">GESTÃO / REVISÃO DE ARTES</div>
+    <h1>Aprovação em lote <span class="bolt">⚡</span></h1>
+    <p>Selecione somente as artes que você já conferiu. Cada imagem e legenda deve ser revisada antes da aprovação.</p>
+  </div>
+  <span class="pill">{{ posts|length }} aguardando revisão</span>
+</div>
+<div class="info-strip">
+  <strong>Aprovar não publica imediatamente.</strong>
+  Os conteúdos escolhidos entram na fila de postagens aprovadas.
+  Itens publicados, agendados ou reservados não podem ser aprovados novamente nesta tela.
+</div>
+{% if posts %}
+<form method="post" action="{{ url_for('bulk_approval') }}" class="bulk-form">
+  <input type="hidden" name="csrf" value="{{ csrf() }}">
+  <div class="bulk-gallery">
+    {% for post in posts %}
+    <article class="bulk-card">
+      <div class="bulk-image"><img src="{{ post.image_url }}" alt="Arte {{ post.id }} — {{ post.title }}" loading="lazy"></div>
+      <div class="bulk-body">
+        <div class="row-top"><span class="code">POST {{ post.id }}</span><span class="status draft">Rascunho</span></div>
+        <h3>{{ post.title }}</h3>
+        <p>{{ post.hook }}</p>
+        <details class="bulk-caption">
+          <summary>Ler legenda e hashtags</summary>
+          <div>{{ post.caption }}</div>
+        </details>
+        <a class="review-link" href="{{ url_for('detail', pid=post.id) }}">Abrir revisão completa <span>→</span></a>
+        <label class="bulk-select">
+          <input name="post_ids" value="{{ post.id }}" type="checkbox" {{ 'disabled' if not writable else '' }}>
+          <span>Selecionar para aprovar</span>
+        </label>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+  <div class="bulk-confirm">
+    {% if writable %}
+    <label>
+      <input type="checkbox" name="confirm_review" value="yes" required>
+      <span>Conferi as imagens e legendas selecionadas. Quero aprová-las para a fila automática.</span>
+    </label>
+    <button type="submit" class="button primary">Aprovar artes selecionadas ✓</button>
+    {% else %}
+    <div class="notice">Edição indisponível: conecte a credencial restrita do GitHub na Render para ativar esta função.</div>
+    {% endif %}
+  </div>
+</form>
+{% else %}
+<div class="empty">Não há novas artes aguardando revisão. A fila está toda revisada.</div>
+{% endif %}
+{% endblock %}
