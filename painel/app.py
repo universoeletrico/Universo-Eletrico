@@ -141,7 +141,9 @@ def csrf_token():
 
 def validate_csrf():
     import hmac
-    if not hmac.compare_digest(session.get("csrf", ""), request.form.get("csrf", "")):
+    expected = session.get("csrf")
+    supplied = request.form.get("csrf")
+    if (not expected or not supplied or not hmac.compare_digest(expected, supplied)):
         abort(400, "Falha na validacao de segurança do formulário.")
 
 
