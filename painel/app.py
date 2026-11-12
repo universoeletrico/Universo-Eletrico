@@ -11,6 +11,7 @@ import os
 import secrets
 import time
 from datetime import datetime, timezone
+from math import ceil
 from pathlib import Path
 from threading import Lock
 
@@ -108,6 +109,26 @@ def posts_with_status():
     return rows
 
 
+def coverage_for(rows, schedule):
+    """Estimativa conservadora de dias programados cobertos pela fila atual.
+
+    Contamos apenas artes aprovadas, nao publicadas, nao agendadas.
+    A previsao nao garante entrega (API, aprovacao, atrasos do GitHub).
+    """
+    valid = validate_schedule(schedule)
+    available = sum(p["status_key"] == "approved" for p in rows)
+    per_day = len(valid["times"])
+    return {
+        "posts": available,
+        "days": ceil(available / per_day) if available else 0,
+        "full_days": available // per_day,
+        "partial": (available % per_day) != 0,
+        "per_day": per_day,
+        "active_days": len(valid["days"]),
+        "enabled": valid["enabled"],
+    }
+
+
 def csrf_token():
     if "csrf" not in session:
         session["csrf"] = secrets.token_urlsafe(24)
@@ -203,7 +224,8 @@ def dashboard():
         and (not query or query in (p["title"] + " " + p.get("hook", "") + " " + p.get("caption", "")).casefold())
     ]
     totals = {k: sum(p["status_key"] == k for p in all_posts) for k in ("draft", "approved", "scheduled", "published")}
-    return render_template("dashboard.html", posts=results, total=len(all_posts), totals=totals, q=query, selected=selected, tab="artes")
+    coverage = coverage_for(all_posts, repo_json("content/schedule.json"))
+    return render_template("dashboard.html", posts=results, total=len(all_posts), totals=totals, coverage=coverage, q=query, selected=selected, tab="artes")
 
 
 @app.route("/post/<pid>")
@@ -215,6 +237,78 @@ def detail(pid):
     if not post:
         abort(404)
     return render_template("detail.html", post=post, tab="artes")
+
+
+def github_file(path):
+    """Carrega a versao atual do GitHub (nunca cache) para escrita com SHA."""
+    response = requests.get(API + path, headers=github_headers(write=True), timeout=15)
+    response.raise_for_status()
+    blob = response.json()
+    return json.loads(base64.b64decode(blob["content"]).decode("utf-8")), blob["sha"]
+
+
+def save_bulk_approval(ids):
+    """Aprova somente rascunhos escolhidos, em um commit atomico.
+
+    Antes de editar, obtem o estado atual sem cache e protege posts
+    publicados, agendados externamente ou reservados pelo robo.
+    """
+    if not ids or len(ids) > 30 or len(ids) != len(set(ids)):
+        raise ValueError("Escolha de 1 a 30 artes, sem repetir.")
+    if any(not isinstance(pid, str) or len(pid) != 3 or not pid.isdecimal() for pid in ids):
+        raise ValueError("Identificador de arte invalido.")
+    posts, posts_sha = github_file("content/posts.json")
+    state, _ = github_file("content/state.json")
+    by_id = {p.get("id"): p for p in posts}
+    blocked = {p.get("id") for p in state.get("published", [])}
+    blocked.update(p.get("id") for p in state.get("externally_scheduled", []))
+    if state.get("pending"):
+        blocked.add(state["pending"].get("id"))
+    for pid in ids:
+        post = by_id.get(pid)
+        if (not post or pid in blocked or post.get("approved") is not False
+                or not post.get("caption") or not post.get("title")):
+            raise ValueError("Uma das artes foi alterada, aprovada ou reservada. Atualize a pagina.")
+    for pid in ids:
+        by_id[pid]["approved"] = True
+
+    content = json.dumps(posts, indent=2, ensure_ascii=False) + "\n"
+    payload = {
+        "message": f"painel: aprovar {len(ids)} artes revisadas em lote",
+        "content": base64.b64encode(content.encode("utf-8")).decode("ascii"),
+        "sha": posts_sha,
+        "branch": "main",
+    }
+    response = requests.put(API + "content/posts.json",
+                            headers=github_headers(write=True), json=payload, timeout=20)
+    if response.status_code in (409, 422):
+        raise ValueError("A fila foi alterada simultaneamente. Atualize a tela antes de tentar novamente.")
+    response.raise_for_status()
+    invalidate("content/posts.json", "content/state.json")
+    return len(ids)
+
+
+@app.route("/aprovacao-lote", methods=["GET", "POST"])
+@login_required
+def bulk_approval():
+    if request.method == "POST":
+        validate_csrf()
+        ids = request.form.getlist("post_ids")
+        if request.form.get("confirm_review") != "yes":
+            flash("Confirme que revisou as artes e legendas selecionadas.", "error")
+            return redirect(url_for("bulk_approval"))
+        try:
+            total = save_bulk_approval(ids)
+            flash(f"{total} arte(s) aprovadas e enviadas para a fila. Nenhum post foi publicado agora.", "success")
+            return redirect(url_for("dashboard"))
+        except (ValueError, RuntimeError, requests.RequestException) as exc:
+            app.logger.warning("Falha em aprovacao por lote: %s", type(exc).__name__)
+            flash(str(exc) if isinstance(exc, (ValueError, RuntimeError))
+                  else "Nao foi possivel concluir a aprovacao no GitHub.", "error")
+            return redirect(url_for("bulk_approval"))
+
+    drafts = [p for p in posts_with_status() if p["status_key"] == "draft"]
+    return render_template("bulk_approval.html", posts=drafts, tab="lote")
 
 
 def save_to_github(pid, caption, approved):
