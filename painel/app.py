@@ -32,6 +32,12 @@ OWNER = "universoeletrico"
 REPO = "Universo-Eletrico"
 API = f"https://api.github.com/repos/{OWNER}/{REPO}/contents/"
 ROOT = Path(__file__).resolve().parents[1]
+
+# Reutiliza as mesmas regras da agenda que o robo executa no GitHub.
+import sys
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+from src.schedule_rules import DAYS, validate_schedule, upcoming
 MEDIA = "https://universoeletrico.github.io/Universo-Eletrico/posts/"
 LOGO = "https://raw.githubusercontent.com/universoeletrico/Universo-Eletrico/main/assets/logo-original.png"
 _cache = {}
@@ -262,6 +268,64 @@ def save_post(pid):
         app.logger.warning("Erro ao salvar revisao: %s", type(exc).__name__)
         flash(str(exc) if isinstance(exc, (ValueError, RuntimeError)) else "Nao foi possivel conectar ao GitHub.", "error")
     return redirect(url_for("detail", pid=pid))
+
+
+def save_schedule_to_github(schedule):
+    """Grava somente content/schedule.json com o SHA correto, sem alterar workflows."""
+    validated = validate_schedule(schedule)
+    headers = github_headers(write=True)
+    url = API + "content/schedule.json"
+    existing = requests.get(url, headers=headers, timeout=15)
+    existing.raise_for_status()
+    current = existing.json()
+    contents = json.dumps(validated, ensure_ascii=False, indent=2) + "\n"
+    data = {
+        "message": "painel: atualizar dias e horarios de publicacao",
+        "content": base64.b64encode(contents.encode("utf-8")).decode("ascii"),
+        "sha": current["sha"],
+        "branch": "main",
+    }
+    response = requests.put(url, headers=headers, json=data, timeout=20)
+    if response.status_code in (409, 422):
+        raise ValueError("A agenda mudou no GitHub. Recarregue a pagina e tente novamente.")
+    response.raise_for_status()
+    invalidate("content/schedule.json")
+
+
+@app.route("/agenda", methods=["GET", "POST"])
+@login_required
+def agenda():
+    if request.method == "POST":
+        validate_csrf()
+        try:
+            quantidade = int(request.form.get("quantidade", "1"))
+            if quantidade not in (1, 2, 3):
+                raise ValueError("Escolha de 1 a 3 postagens por dia.")
+            raw_days = request.form.getlist("days")
+            if len(raw_days) > 7 or any(not x.isdigit() for x in raw_days):
+                raise ValueError("Selecione dias validos.")
+            settings = validate_schedule({
+                "timezone": "America/Sao_Paulo",
+                "enabled": request.form.get("enabled") == "on",
+                "days": [int(x) for x in raw_days],
+                "times": [request.form.get(f"time{i}", "").strip() for i in range(1, quantidade + 1)],
+            })
+            save_schedule_to_github(settings)
+            flash("Agenda salva! O robo consultara os novos dias e horarios na proxima execucao.", "success")
+        except (ValueError, RuntimeError, requests.RequestException) as exc:
+            app.logger.warning("Nao foi possivel salvar a agenda: %s", type(exc).__name__)
+            flash(str(exc) if isinstance(exc, (ValueError, RuntimeError))
+                  else "Erro de conexao com o GitHub. Tente novamente.", "error")
+        return redirect(url_for("agenda"))
+
+    settings = validate_schedule(repo_json("content/schedule.json"))
+    sugestoes = ["19:17", "12:17", "17:17"]
+    exibicao = settings["times"] + [t for t in sugestoes if t not in settings["times"]]
+    return render_template(
+        "schedule.html", config=settings, days=list(enumerate(DAYS)), tab="agenda",
+        quantidade=len(settings["times"]), horarios=exibicao[:3],
+        proximos=upcoming(settings, days_ahead=14),
+    )
 
 
 @app.route("/planejamento")
