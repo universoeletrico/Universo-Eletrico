@@ -15,6 +15,16 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
+      - name: Baixar codigo
+        uses: actions/checkout@v4
+      - name: Preparar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Instalar dependencias do painel
+        run: pip install -r painel/requirements.txt
+      - name: Testar rotas, galeria e CSRF localmente
+        run: python -m unittest discover -s painel/tests -v
       - name: Confirmar que painel e login respondem sem expor segredos
         run: |
           python - <<'PY'
