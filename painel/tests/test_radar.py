@@ -36,7 +36,7 @@ class TestRadar(unittest.TestCase):
 
     def test_radar_funciona_sem_token_de_api(self):
         self.authorize()
-        with patch.dict(os.environ, {"MELI_ACCESS_TOKEN": ""}), \
+        with patch.object(studio.meli_oauth, "configured", return_value=False), \
              patch.object(studio, "repo_json", side_effect=[
                  {"products": self.products}, self.posts
              ]), \
@@ -56,12 +56,14 @@ class TestRadar(unittest.TestCase):
              ]), patch.object(studio, "search_official_catalog") as search:
             r = self.client.get("/radar?q=arduino")
         self.assertEqual(r.status_code, 200)
-        self.assertIn(b"desativada", r.data)
+        self.assertIn(b"Conecte primeiro", r.data)
         search.assert_not_called()
 
     def test_radar_com_token_consulta_api_uma_vez(self):
         self.authorize()
-        with patch.dict(os.environ, {"MELI_ACCESS_TOKEN": "token-falso"}), \
+        with patch.object(studio.meli_oauth, "configured", return_value=True), \
+             patch.object(studio.meli_oauth, "connection_status", return_value={"connected": True}), \
+             patch.object(studio.meli_oauth, "valid_access_token", return_value="token-falso"), \
              patch.object(studio, "repo_json", side_effect=[
                  {"products": self.products}, self.posts
              ]), patch.object(studio, "search_official_catalog", return_value=[
@@ -74,7 +76,9 @@ class TestRadar(unittest.TestCase):
 
     def test_radar_com_api_negada_nao_vaza_token(self):
         self.authorize()
-        with patch.dict(os.environ, {"MELI_ACCESS_TOKEN": "segredo-secreto"}), \
+        with patch.object(studio.meli_oauth, "configured", return_value=True), \
+             patch.object(studio.meli_oauth, "connection_status", return_value={"connected": True}), \
+             patch.object(studio.meli_oauth, "valid_access_token", return_value="segredo-secreto"), \
              patch.object(studio, "repo_json", side_effect=[
                  {"products": self.products}, self.posts
              ]), patch.object(studio, "search_official_catalog", side_effect=RuntimeError("A API negou")):
