@@ -3,12 +3,13 @@ name: Universo Eletrico - Robo Diario
 on:
   workflow_dispatch:
   schedule:
-    - cron: '17 22 * * *'
+    # A configuracao de dias/horarios fica no content/schedule.json, editada no painel.
+    # O cron apenas checa a agenda (GitHub executa agendamentos em UTC).
+    - cron: '7,22,37,52 * * * *'
 
 permissions:
   contents: write
 
-# Publicacao somente com autorizacao explicita em PUBLISH_ENABLED.
 concurrency:
   group: instagram-universo-eletrico
   cancel-in-progress: false
@@ -19,61 +20,68 @@ jobs:
     timeout-minutes: 10
 
     env:
-      PUBLISH_ENABLED: ${{ vars.PUBLISH_ENABLED }}
+      # Ativacao autorizada. A chave enabled em content/schedule.json pausa/retoma
+      # sem alterar workflows nem variaveis do GitHub.
+      PUBLISH_ENABLED: 'true'
       PUBLIC_MEDIA_BASE_URL: ${{ vars.PUBLIC_MEDIA_BASE_URL }}
       INSTAGRAM_USER_ID: ${{ secrets.INSTAGRAM_USER_ID }}
       INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
       GRAPH_API_VERSION: v27.0
 
     steps:
-      - name: Baixar arquivos
+      - name: Baixar repositorio
         uses: actions/checkout@v4
         with:
           persist-credentials: true
 
-      - name: Configurar Python
+      - name: Preparar Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
+      - name: Conferir agenda antes de executar
+        id: agenda
+        if: github.event_name == 'schedule'
+        run: python src/publish_daily.py --check-schedule
+
       - name: Instalar dependencias
+        if: steps.agenda.outputs.ready == 'true'
         run: pip install -r requirements-publish.txt
 
-      - name: Testar o robo
+      - name: Executar testes de seguranca
+        if: steps.agenda.outputs.ready == 'true'
         run: python -m unittest discover -s tests -v
 
-      - name: Simular publicacao
-        if: env.PUBLISH_ENABLED != 'true'
-        run: python src/publish_daily.py --dry-run
-
       - name: Reservar conteudo antes de publicar
-        if: env.PUBLISH_ENABLED == 'true'
+        if: steps.agenda.outputs.ready == 'true'
+        env:
+          SCHEDULE_SLOT: ${{ steps.agenda.outputs.slot }}
         run: |
           python src/publish_daily.py --reserve
           if ! git diff --quiet -- content/state.json; then
             echo 'RESERVED_THIS_RUN=true' >> "$GITHUB_ENV"
           fi
 
-      - name: Confirmar reserva no repositorio
-        if: env.PUBLISH_ENABLED == 'true' && env.RESERVED_THIS_RUN == 'true'
+      - name: Confirmar reserva no GitHub
+        if: steps.agenda.outputs.ready == 'true' && env.RESERVED_THIS_RUN == 'true'
         run: |
-          if ! git diff --quiet -- content/state.json; then
-            git config user.name 'github-actions[bot]'
-            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-            git add content/state.json
-            git commit -m 'Reservar post para publicacao'
-            git push
-          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add content/state.json
+          git commit -m 'Reservar post conforme agenda do painel'
+          git push
 
-      - name: Publicar somente post reservado
-        if: env.PUBLISH_ENABLED == 'true' && env.RESERVED_THIS_RUN == 'true'
+      - name: Publicar somente a reserva confirmada
+        if: steps.agenda.outputs.ready == 'true' && env.RESERVED_THIS_RUN == 'true'
         run: python src/publish_daily.py --publish
 
-      - name: Registrar publicacao confirmada
-        if: env.PUBLISH_ENABLED == 'true' && env.RESERVED_THIS_RUN == 'true'
+      - name: Gravar publicacao confirmada
+        if: steps.agenda.outputs.ready == 'true' && env.RESERVED_THIS_RUN == 'true'
         run: |
-          if ! git diff --quiet -- content/state.json; then
-            git add content/state.json
-            git commit -m 'Registrar publicacao confirmada'
-            git push
+          if git diff --quiet -- content/state.json; then
+            echo 'Sem comprovante no state.json. Verifique a execucao.'
+            exit 1
           fi
+          git add content/state.json
+          git commit -m 'Registrar publicacao confirmada'
+          git push
