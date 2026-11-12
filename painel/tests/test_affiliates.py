@@ -53,7 +53,7 @@ class TestAffiliates(unittest.TestCase):
             response = self.client.get("/afiliados/A001")
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"meli.la/2jbidad", response.data)
-        self.assertIn(b"Salvar", response.data)
+        self.assertIn(b"Legenda para campanha", response.data)
 
     def test_vitrine_nao_expoe_produto_sem_aprovacao(self):
         with patch.object(studio, "repo_json", return_value={"products": [self.product]}):
@@ -72,7 +72,7 @@ class TestAffiliates(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"meli.la/2jbidad", response.data)
         self.assertNotIn(b"meli.la/naopublicar", response.data)
-        self.assertIn(b"Publicidade", response.data)
+        self.assertIn(b"Link de afiliado", response.data)
 
     def test_link_apenas_https_e_dominio_correto(self):
         self.assertEqual(validate_affiliate_url("https://meli.la/2jbidad", "mercadolivre"),
