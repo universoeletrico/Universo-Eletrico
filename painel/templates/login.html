@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Entrar · Universo Elétrico Studio{% endblock %}
+{% block login_content %}
+<div class="login-page">
+  <div class="login-panel">
+    <span class="login-emoji">⚡</span>
+    <div class="eyebrow">CENTRAL DE CONTEÚDOS</div>
+    <h1>Universo Elétrico<br><span>Studio</span></h1>
+    <p>Suas artes, legendas e aprovações em um único lugar.</p>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}<div class="alert {{ category }}">{{ message }}</div>{% endfor %}
+    {% endwith %}
+    <form method="post" action="{{ url_for('login') }}">
+      <input type="hidden" name="csrf" value="{{ csrf() }}">
+      <label for="password">Senha de administrador</label>
+      <input id="password" type="password" name="password" autocomplete="current-password" required autofocus placeholder="Digite sua senha">
+      <button class="button primary full" type="submit">Entrar na plataforma <span>→</span></button>
+    </form>
+    <small>Ambiente privado para validação do Universo Elétrico.</small>
+  </div>
+</div>
+{% endblock %}
