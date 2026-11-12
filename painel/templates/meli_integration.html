@@ -47,7 +47,8 @@
         <li>Entre no <a href="https://developers.mercadolivre.com.br/" target="_blank" rel="noopener noreferrer" class="small-link">DevCenter oficial do Mercado Livre ↗</a> usando a conta responsável pelo projeto.</li>
         <li>Em <strong>Minhas aplicações</strong>, crie uma aplicação com nome como <strong>Universo Eletrico Studio</strong>, finalidade de consulta de produtos e permissões mínimas de leitura. Habilite o acesso offline necessário à renovação.</li>
         <li>Ative <strong>PKCE (S256)</strong> no DevCenter e cadastre o Redirect URI HTTPS exatamente como exibido abaixo.</li>
-        <li>No serviço Universo Elétrico Studio da Render, em <strong>Environment</strong>, configure o Client ID, Client Secret, URL de PostgreSQL dedicado e chave aleatória de criptografia.</li>
+        <li>Crie um banco PostgreSQL independente no <a href="https://console.neon.tech/" target="_blank" rel="noopener noreferrer" class="small-link">Neon Free ↗</a>, no projeto <strong>universo-eletrico-oauth</strong>. Copie a <em>connection string</em> pelo botão Connect.</li>
+        <li>No serviço Universo Elétrico Studio da Render, em <strong>Environment</strong>, configure o Client ID, Client Secret, a conexão privada do Neon em <code>MELI_DATABASE_URL</code> e a chave de criptografia.</li>
         <li>Volte a esta tela e clique em <strong>Conectar minha conta oficialmente</strong> para autorizar o acesso pelo Mercado Livre.</li>
       </ol>
     </div>
@@ -62,11 +63,11 @@
         <code>MELI_DATABASE_URL</code>
         <code>MELI_TOKEN_KEY</code>
       </div>
-      <p class="safety-note">MELI_TOKEN_KEY: valor aleatório com pelo menos 32 caracteres. MELI_DATABASE_URL: PostgreSQL persistente exclusivo desta integração. Não use o banco do Financeiro em Dia. Guardar o Client Secret ou tokens no GitHub público seria inseguro.</p>
+      <p class="safety-note">MELI_TOKEN_KEY: valor aleatório de pelo menos 32 caracteres, já configurado no serviço. MELI_DATABASE_URL: URL privada de conexão do PostgreSQL Neon, em um projeto exclusivo do Universo Elétrico. A URL contém senha e deve ficar somente na Render. Utilize a string de conexão com SSL fornecida pela Neon. Não use os bancos de outros projetos. Guardar o Client Secret ou tokens no GitHub público seria inseguro.</p>
       {% if missing %}
       <p class="meli-missing">Ainda não configuradas: {{ missing|join(', ') }}.</p>
       {% endif %}
-      <p class="safety-note">O PostgreSQL pode envolver custo de hospedagem. Confira o plano da Render antes de criar qualquer banco.</p>
+      <p class="safety-note">Escolha o plano <strong>Free (US$ 0)</strong> no Neon e confira os limites antes de confirmar. O Neon pode pausar o processamento após inatividade e reativá-lo no próximo acesso. Não é preciso contratar PostgreSQL na Render.</p>
     </div>
   </aside>
 </div>
