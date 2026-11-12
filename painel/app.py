@@ -39,6 +39,10 @@ import sys
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 from src.schedule_rules import DAYS, validate_schedule, upcoming
+from painel.affiliates import (
+    CATEGORIES, IDEAS, MARKETPLACES, draft_caption, marketplace_name,
+    new_id, normalize_product, require_disclosure, timestamp
+)
 MEDIA = "https://universoeletrico.github.io/Universo-Eletrico/posts/"
 LOGO = "https://raw.githubusercontent.com/universoeletrico/Universo-Eletrico/main/assets/logo-original.png"
 _cache = {}
@@ -427,6 +431,163 @@ def agenda():
 def planejamento():
     posts = posts_with_status()
     return render_template("planning.html", posts=posts, tab="planejamento")
+
+
+def affiliate_catalog():
+    """Busca catalogo do repositorio; nao armazena tokens nem dados bancarios."""
+    catalog = repo_json("content/affiliate_products.json")
+    if (not isinstance(catalog, dict) or not isinstance(catalog.get("products"), list)):
+        raise ValueError("Arquivo de produtos de afiliados invalido.")
+    return catalog["products"]
+
+
+def save_affiliate_change(change):
+    """Atualiza produtos em um unico commit GitHub, com protecao de versao (SHA)."""
+    catalog, sha = github_file("content/affiliate_products.json")
+    if (not isinstance(catalog, dict) or not isinstance(catalog.get("products"), list)):
+        raise ValueError("Catalogo de produtos invalido.")
+    result = change(catalog["products"])
+    payload = {
+        "message": "painel: revisar catalogo e campanhas de afiliados",
+        "content": base64.b64encode(
+            (json.dumps(catalog, indent=2, ensure_ascii=False) + "\n").encode("utf-8")
+        ).decode("ascii"),
+        "sha": sha,
+        "branch": "main",
+    }
+    response = requests.put(
+        API + "content/affiliate_products.json",
+        headers=github_headers(write=True), json=payload, timeout=20
+    )
+    if response.status_code in (409, 422):
+        raise ValueError("O catalogo mudou no GitHub. Atualize a pagina e tente novamente.")
+    response.raise_for_status()
+    invalidate("content/affiliate_products.json")
+    return result
+
+
+@app.route("/afiliados", methods=["GET", "POST"])
+@login_required
+def affiliates_page():
+    if request.method == "POST":
+        validate_csrf()
+        try:
+            name = request.form.get("name", "").strip()
+            category = request.form.get("category", "").strip()
+            raw = normalize_product({
+                "name": name,
+                "category": category,
+                "marketplace": request.form.get("marketplace", ""),
+                "affiliate_url": request.form.get("affiliate_url", ""),
+                "description": request.form.get("description", ""),
+                "caption": draft_caption(name, category),
+            })
+            def add(products):
+                if len(products) >= 300:
+                    raise ValueError("Limite de 300 produtos atingido.")
+                pid = new_id(products)
+                products.append({
+                    "id": pid, **raw, "status": "draft",
+                    "created_at": timestamp(), "updated_at": timestamp()
+                })
+                return pid
+            pid = save_affiliate_change(add)
+            flash("Produto cadastrado! Revise a legenda e aprove antes de divulgar.", "success")
+            return redirect(url_for("affiliate_detail", pid=pid))
+        except (ValueError, RuntimeError, requests.RequestException) as exc:
+            app.logger.warning("Cadastro de afiliados falhou: %s", type(exc).__name__)
+            flash(str(exc) if isinstance(exc, (ValueError, RuntimeError))
+                  else "Falha na conexao com o GitHub.", "error")
+            return redirect(url_for("affiliates_page"))
+
+    products = affiliate_catalog()
+    stats = {
+        "total": len(products),
+        "draft": sum(x.get("status") == "draft" for x in products),
+        "approved": sum(x.get("status") == "approved" for x in products),
+        "rejected": sum(x.get("status") == "rejected" for x in products)
+    }
+    return render_template(
+        "affiliates.html", tab="afiliados", products=products,
+        stats=stats, marketplaces=MARKETPLACES,
+        categories=CATEGORIES, ideas=IDEAS,
+        marketplace_name=marketplace_name
+    )
+
+
+@app.route("/afiliados/<pid>", methods=["GET", "POST"])
+@login_required
+def affiliate_detail(pid):
+    if not (len(pid) in range(4, 7) and pid.startswith("A") and pid[1:].isdigit()):
+        abort(404)
+    if request.method == "POST":
+        validate_csrf()
+        action = request.form.get("action", "")
+        if action not in {"save", "approve", "reject", "draft", "regenerate"}:
+            abort(400)
+        if action == "approve" and request.form.get("reviewed") != "yes":
+            flash("Confirme que revisou o produto, o anuncio e o texto comercial.", "error")
+            return redirect(url_for("affiliate_detail", pid=pid))
+        try:
+            def update(products):
+                found = next((p for p in products if p.get("id") == pid), None)
+                if found is None:
+                    raise ValueError("Produto nao encontrado.")
+                if action in ("save", "regenerate"):
+                    fields = {
+                        "name": request.form.get("name", ""),
+                        "category": request.form.get("category", ""),
+                        "marketplace": request.form.get("marketplace", ""),
+                        "affiliate_url": request.form.get("affiliate_url", ""),
+                        "description": request.form.get("description", ""),
+                        "caption": request.form.get("caption", ""),
+                    }
+                    if action == "regenerate":
+                        fields["caption"] = draft_caption(fields["name"], fields["category"])
+                    approved = found.get("status") == "approved"
+                    found.update(normalize_product(fields))
+                    # Toda edicao comercial exige nova revisao antes de exibir na vitrine.
+                    found["status"] = "draft"
+                elif action == "approve":
+                    require_disclosure(found.get("caption", ""))
+                    normalize_product(found)
+                    found["status"] = "approved"
+                else:
+                    found["status"] = "rejected" if action == "reject" else "draft"
+                found["updated_at"] = timestamp()
+                return found["id"]
+            save_affiliate_change(update)
+            messages = {
+                "save": "Rascunho salvo. Aprovacao necessaria antes da divulgacao.",
+                "regenerate": "Legenda-modelo recriada. Confira o conteudo antes de aprovar.",
+                "approve": "Produto aprovado! Ele agora aparece na vitrine publica.",
+                "reject": "Produto retirado da vitrine e marcado como rejeitado.",
+                "draft": "Produto retornou para revisao."
+            }
+            flash(messages[action], "success")
+        except (ValueError, RuntimeError, requests.RequestException) as exc:
+            app.logger.warning("Erro ao revisar afiliado: %s", type(exc).__name__)
+            flash(str(exc) if isinstance(exc, (ValueError, RuntimeError))
+                  else "Nao foi possivel salvar no GitHub.", "error")
+        return redirect(url_for("affiliate_detail", pid=pid))
+
+    product = next((p for p in affiliate_catalog() if p.get("id") == pid), None)
+    if product is None:
+        abort(404)
+    return render_template(
+        "affiliate_detail.html", product=product, tab="afiliados",
+        marketplaces=MARKETPLACES, categories=CATEGORIES,
+        marketplace_name=marketplace_name
+    )
+
+
+@app.get("/vitrine")
+def affiliate_storefront():
+    """Pagina publica somente de produtos explicitamente aprovados."""
+    products = [p for p in affiliate_catalog() if p.get("status") == "approved"]
+    response = render_template("vitrine.html", products=products,
+                               marketplace_name=marketplace_name)
+    return response
 
 
 @app.route("/estrutura")
