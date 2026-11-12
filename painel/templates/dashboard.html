@@ -11,6 +11,18 @@
   <div class="metric"><small>Aprovadas na fila</small><strong>{{ totals.approved }}</strong><span>Prontas para o robô</span></div>
   <div class="metric"><small>Registradas como publicadas</small><strong>{{ totals.published }}</strong><span>Histórico do GitHub</span></div>
 </section>
+<div class="queue-health">
+  <div class="queue-health-text">
+    <span class="eyebrow">SAÚDE DA FILA</span>
+    <h2>{{ coverage.posts }} arte{{ '' if coverage.posts == 1 else 's' }} pronta{{ '' if coverage.posts == 1 else 's' }} para publicar</h2>
+    <p>Até <strong>{{ coverage.days }} dia{{ '' if coverage.days == 1 else 's' }} de conteúdo</strong> com a programação atual de {{ coverage.per_day }} post{{ '' if coverage.per_day == 1 else 's' }} por dia.
+      {% if coverage.partial %}O último dia ficará parcialmente preenchido.{% endif %}
+      {% if not coverage.enabled %}A programação está pausada.{% endif %}
+    </p>
+    <small>Estimativa de capacidade; não garante postagem ou alcance. Artes já publicadas e agendadas não entram na conta.</small>
+  </div>
+  <a class="button outline" href="{{ url_for('bulk_approval') }}">Revisar várias artes →</a>
+</div>
 <section class="section-head"><div><h2>Biblioteca de artes</h2><p>Revise o visual, leia a legenda e organize a fila.</p></div><span class="result-count">{{ posts|length }} resultados</span></section>
 <form class="filters" method="get" action="{{ url_for('dashboard') }}">
   <input type="search" name="q" value="{{ q }}" placeholder="Buscar por assunto, tema ou legenda...">
