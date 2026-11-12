@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Central de Afiliados · Universo Elétrico{% endblock %}
+{% block content %}
+<div class="heading-row">
+  <div>
+    <div class="eyebrow">MONETIZAÇÃO / COMÉRCIO RESPONSÁVEL</div>
+    <h1>Central de Afiliados <span class="bolt">⚡</span></h1>
+    <p>Organize recomendações, prepare campanhas e aprove os produtos antes de divulgá-los.</p>
+  </div>
+  <a class="button outline" href="{{ url_for('affiliate_storefront') }}" target="_blank" rel="noopener noreferrer">Ver vitrine pública ↗</a>
+</div>
+<div class="metrics">
+  <div class="metric"><small>Produtos cadastrados</small><strong>{{ stats.total }}</strong><span>No catálogo do Studio</span></div>
+  <div class="metric"><small>Para revisar</small><strong>{{ stats.draft }}</strong><span>Nenhum entra na vitrine</span></div>
+  <div class="metric"><small>Aprovados</small><strong>{{ stats.approved }}</strong><span>Visíveis na vitrine</span></div>
+  <div class="metric"><small>Rejeitados</small><strong>{{ stats.rejected }}</strong><span>Fora de circulação</span></div>
+</div>
+<div class="affiliate-layout">
+  <section class="affiliate-main">
+    <div class="section-head"><div><h2>Catálogo e campanhas</h2><p>Abra um produto para conferir o link, editar a legenda e aprovar.</p></div><span class="result-count">{{ products|length }} produto(s)</span></div>
+    <div class="affiliate-list">
+      {% for product in products %}
+      <article class="affiliate-item">
+        <div class="affiliate-item-icon"><span>⚡</span></div>
+        <div class="affiliate-item-body">
+          <div class="row-top">
+            <span class="code">{{ product.id }} · {{ marketplace_name(product.marketplace) }}</span>
+            <span class="status {{ 'approved' if product.status == 'approved' else 'published' if product.status == 'rejected' else 'draft' }}">{{ 'Aprovado para vitrine' if product.status == 'approved' else 'Rejeitado' if product.status == 'rejected' else 'Aguardando revisão' }}</span>
+          </div>
+          <h3>{{ product.name }}</h3>
+          <p>{{ product.category }}</p>
+          <div class="affiliate-item-links">
+            <a class="review-link" href="{{ url_for('affiliate_detail', pid=product.id) }}">Revisar campanha →</a>
+            <a class="small-link" target="_blank" rel="noopener noreferrer nofollow sponsored" href="{{ product.affiliate_url }}">Conferir anúncio ↗</a>
+          </div>
+        </div>
+      </article>
+      {% else %}
+      <div class="empty">Nenhum produto cadastrado ainda. Comece com o formulário ao lado.</div>
+      {% endfor %}
+    </div>
+  </section>
+  <aside class="affiliate-side">
+    <div class="editor-card">
+      <div class="preview-label"><span>NOVO PRODUTO AFILIADO</span><span>Cadastro manual</span></div>
+      <p class="affiliate-help">Informe o link oficial de afiliado que você gerou. O Studio cria um texto inicial para você revisar.</p>
+      <form method="post" action="{{ url_for('affiliates_page') }}" class="affiliate-form">
+        <input type="hidden" name="csrf" value="{{ csrf() }}">
+        <label>Nome do produto
+          <input type="text" name="name" placeholder="Ex.: Livro de automação industrial" maxlength="150" minlength="6" required>
+        </label>
+        <label>Marketplace
+          <select name="marketplace" required>
+            {% for slug, marketplace in marketplaces.items() %}
+            <option value="{{ slug }}">{{ marketplace.name }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>Categoria
+          <select name="category" required>
+            {% for category in categories %}
+            <option value="{{ category }}">{{ category }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>Link oficial de afiliado
+          <input type="url" name="affiliate_url" placeholder="https://meli.la/..." maxlength="1200" required>
+        </label>
+        <label>Observações (opcional)
+          <textarea name="description" rows="3" maxlength="700" placeholder="O que conferir no anúncio antes de recomendar?"></textarea>
+        </label>
+        {% if writable %}
+        <button class="button primary full" type="submit">Criar campanha para revisão →</button>
+        {% else %}
+        <p class="notice">A gravação requer a integração do GitHub na Render.</p>
+        <button class="button outline full" type="button" disabled>Cadastro temporariamente indisponível</button>
+        {% endif %}
+      </form>
+    </div>
+    <div class="editor-card affiliate-ideas">
+      <div class="preview-label"><span>PAUTAS PARA PESQUISAR</span><span>Sugestões editoriais</span></div>
+      <p class="affiliate-help">Ideias de produtos relevantes para o nosso público. Não são anúncios encontrados nem ofertas verificadas automaticamente.</p>
+      {% for title, category, reason in ideas %}
+      <div class="affiliate-idea">
+        <strong>{{ title }}</strong>
+        <small>{{ category }}</small>
+        <p>{{ reason }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </aside>
+</div>
+<div class="info-strip"><strong>Como funciona:</strong> o link já precisa ter sido gerado na plataforma oficial. Aprovar o produto o exibe na nossa vitrine pública; não envia automaticamente uma arte ao Instagram. Pesquisa por API e criação de artes comerciais continuam como próximos módulos.</div>
+{% endblock %}
