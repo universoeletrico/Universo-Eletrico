@@ -53,8 +53,20 @@ class TestPublisher(unittest.TestCase):
         self.assertEqual(len(posts),30)
         for p in posts:self.assertTrue((root/'docs'/'posts'/f"{p['id']}.jpg").exists())
 
+    
     def test_mode_safe_when_unapproved(self):
-        self.assertIsNone(pub.run(publish=False,now=datetime(2026,11,13,15,0,tzinfo=ZoneInfo('America/Sao_Paulo'))))
+        posts = [{'id': '002', 'approved': False}]
+        state = {
+            'not_before_date': '2026-11-13',
+            'published': [],
+            'externally_scheduled': []
+        }
+        post, reason = pub.select_next(
+            posts, state, '2026-11-13'
+        )
+        self.assertIsNone(post)
+        self.assertIn('aprovados', reason)
+
 
     def test_no_publication_today(self):
         self.assertIsNone(pub.run(publish=False,now=datetime(2026,11,12,19,0,tzinfo=ZoneInfo('America/Sao_Paulo'))))
