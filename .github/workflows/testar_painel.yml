@@ -1,0 +1,51 @@
+name: Testar painel Universo Eletrico
+
+on:
+  push:
+    paths:
+      - 'painel/**'
+      - '.github/workflows/testar_painel.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Confirmar que painel e login respondem sem expor segredos
+        run: |
+          python - <<'PY'
+          import json
+          import time
+          from urllib.request import urlopen
+
+          origin = "https://universo-eletrico-studio.onrender.com"
+          for attempt in range(8):
+              try:
+                  with urlopen(origin + "/health", timeout=35) as response:
+                      assert response.status == 200, response.status
+                      health = json.load(response)
+                  assert health["ok"] is True
+                  assert health["panel_configured"] is True
+                  break
+              except Exception:
+                  if attempt == 7:
+                      raise
+                  time.sleep(12)
+
+          with urlopen(origin + "/login", timeout=35) as response:
+              body = response.read().decode("utf-8")
+              assert response.status == 200
+          assert "Universo Elétrico" in body
+          assert 'type="password"' in body
+
+          with urlopen(origin + "/static/style.css", timeout=35) as response:
+              css = response.read().decode("utf-8")
+              assert response.status == 200
+              assert "--yellow:" in css
+
+          print("Painel online, login protegido e CSS carregado.")
+          PY
