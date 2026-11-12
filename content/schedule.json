@@ -1,5 +1,6 @@
 {
   "timezone": "America/Sao_Paulo",
+  "enabled": true,
   "days": [
     0,
     1,
@@ -9,5 +10,7 @@
     5,
     6
   ],
-  "posts_per_day": 1
+  "times": [
+    "19:17"
+  ]
 }
