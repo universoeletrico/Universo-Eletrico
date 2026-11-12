@@ -1,6 +1,13 @@
 {
   "not_before_date": "2026-11-13",
-  "published": [],
+  "published": [
+    {
+      "id": "002",
+      "media_id": "18102825599382342",
+      "local_date": "2026-11-11",
+      "published_at": "2026-11-12T02:48:47.108277+00:00"
+    }
+  ],
   "externally_scheduled": [
     {
       "id": "001",
@@ -12,10 +19,5 @@
       "source": "Meta Business Suite",
       "note": "Agendado pelo usuário para 19h. Não duplicar via robô."
     }
-  ],
-  "pending": {
-    "id": "002",
-    "local_date": "2026-11-11",
-    "reserved_at": "2026-11-12T02:48:35.074195+00:00"
-  }
+  ]
 }
