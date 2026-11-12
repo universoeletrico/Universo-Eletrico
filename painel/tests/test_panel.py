@@ -3,7 +3,7 @@ import os
 import sys
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -46,7 +46,9 @@ class TestPainel(unittest.TestCase):
 
     def test_galeria_e_status(self):
         self.authorize()
-        with patch.object(studio, "repo_json", side_effect=[self.posts, self.state]):
+        agenda = {"timezone": "America/Sao_Paulo", "enabled": True,
+                  "days": [0, 1, 2, 3, 4, 5, 6], "times": ["19:17"]}
+        with patch.object(studio, "repo_json", side_effect=[self.posts, self.state, agenda]):
             response = self.client.get("/")
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Biblioteca de artes", response.data)
@@ -101,6 +103,97 @@ class TestPainel(unittest.TestCase):
             })
         self.assertEqual(response.status_code, 302)
         salvar.assert_not_called()
+
+    def test_cobertura_so_conta_aprovados_disponiveis(self):
+        posts = [
+            {"id": "003", "status_key": "approved"},
+            {"id": "004", "status_key": "approved"},
+            {"id": "002", "status_key": "published"},
+            {"id": "001", "status_key": "scheduled"},
+        ]
+        agenda = {"timezone": "America/Sao_Paulo", "enabled": True,
+                  "days": [0, 2, 4], "times": ["12:17", "19:17"]}
+        result = studio.coverage_for(posts, agenda)
+        self.assertEqual(result["posts"], 2)
+        self.assertEqual(result["days"], 1)
+        self.assertFalse(result["partial"])
+        result = studio.coverage_for(posts[:1], agenda)
+        self.assertTrue(result["partial"])
+
+    def test_aprovacao_lote_requires_login(self):
+        result = self.client.post("/aprovacao-lote", data={"post_ids": ["003"]})
+        self.assertEqual(result.status_code, 302)
+        self.assertIn("/login", result.location)
+
+    def test_aprovacao_lote_protege_csrf(self):
+        self.authorize()
+        result = self.client.post("/aprovacao-lote", data={
+            "csrf": "errado", "post_ids": ["003"], "confirm_review": "yes"
+        })
+        self.assertEqual(result.status_code, 400)
+
+    def test_aprovacao_lote_exige_revisao(self):
+        self.authorize()
+        with patch.object(studio, "save_bulk_approval") as save:
+            result = self.client.post("/aprovacao-lote", data={
+                "csrf": "teste-csrf", "post_ids": ["003"]
+            })
+        self.assertEqual(result.status_code, 302)
+        save.assert_not_called()
+
+    def test_aprovacao_lote_envia_ids_para_salvar(self):
+        self.authorize()
+        with patch.object(studio, "save_bulk_approval", return_value=2) as save:
+            result = self.client.post("/aprovacao-lote", data={
+                "csrf": "teste-csrf", "post_ids": ["003", "004"], "confirm_review": "yes"
+            })
+        self.assertEqual(result.status_code, 302)
+        save.assert_called_once_with(["003", "004"])
+
+    def test_lista_lote_mostra_so_rascunhos(self):
+        self.authorize()
+        with patch.object(studio, "repo_json", side_effect=[self.posts, self.state]):
+            result = self.client.get("/aprovacao-lote")
+        self.assertEqual(result.status_code, 200)
+        self.assertIn(b"Contator", result.data)
+        self.assertNotIn(b'Disjuntor x fusivel', result.data)
+
+    def test_bulk_nao_edita_publicado_e_nem_agendado(self):
+        state = {"published": [{"id": "002"}], "externally_scheduled": [{"id": "001"}]}
+        with patch.object(studio, "github_file", side_effect=[(self.posts, "sha-post"), (state, "sha-state")]):
+            with self.assertRaises(ValueError):
+                studio.save_bulk_approval(["001"])
+        with patch.object(studio, "github_file", side_effect=[
+            (self.posts, "sha-teste"), (state, "sha-estado")
+        ]), patch.object(studio.requests, "put") as put:
+            with self.assertRaises(ValueError):
+                studio.save_bulk_approval(["002"])
+            put.assert_not_called()
+
+    def test_bulk_aprova_somente_selecionados_em_um_commit(self):
+        posts = [
+            {"id": "003", "title": "Sensor", "caption": "Legenda 3", "approved": False},
+            {"id": "004", "title": "Motor", "caption": "Legenda 4", "approved": False},
+            {"id": "005", "title": "Rele", "caption": "Legenda 5", "approved": False},
+        ]
+        response = MagicMock()
+        response.status_code = 200
+        with patch.object(studio, "github_file", side_effect=[
+            (posts, "sha-posterior"), ({"published": []}, "sha-status")
+        ]), patch.object(studio, "github_headers", return_value={}), \
+             patch.object(studio.requests, "put", return_value=response) as put, \
+             patch.object(studio, "invalidate") as invalidate:
+            total = studio.save_bulk_approval(["003", "004"])
+        self.assertEqual(total, 2)
+        self.assertTrue(posts[0]["approved"])
+        self.assertTrue(posts[1]["approved"])
+        self.assertFalse(posts[2]["approved"])
+        self.assertEqual(put.call_count, 1)
+        invalidate.assert_called_once()
+
+    def test_bulk_rejeita_ids_repetidos(self):
+        with self.assertRaises(ValueError):
+            studio.save_bulk_approval(["003", "003"])
 
     def test_saude_geral(self):
         self.assertTrue(self.client.get("/health").json["ok"])
