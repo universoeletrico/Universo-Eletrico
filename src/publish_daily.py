@@ -18,6 +18,12 @@ POSTS_FILE = ROOT / 'content' / 'posts.json'
 STATE_FILE = ROOT / 'content' / 'state.json'
 TZ = ZoneInfo('America/Sao_Paulo')
 
+try:
+    from src.schedule_rules import read_schedule, due_slot
+except ModuleNotFoundError:
+    from schedule_rules import read_schedule, due_slot
+
+
 
 def load_json(path: Path):
     return json.loads(path.read_text(encoding='utf-8'))
@@ -29,7 +35,7 @@ def save_state(state):
     tmp.replace(STATE_FILE)
 
 
-def select_next(posts, state, local_day):
+def select_next(posts, state, local_day, max_per_day=1, slot=None):
     """Retorna proximo post; nunca pula reservas ou posts agendados."""
     if state.get('pending'):
         return None, ('Existe uma publicacao reservada, ainda sem confirmacao. '
@@ -40,8 +46,11 @@ def select_next(posts, state, local_day):
     scheduled = state.get('externally_scheduled', [])
     if any(entry.get('date') == local_day for entry in scheduled):
         return None, 'Ja existe publicacao programada manualmente nessa data.'
-    if any(entry.get('local_date') == local_day for entry in state.get('published', [])):
-        return None, 'Já foi publicado um post nesta data.'
+    today_posts = [p for p in state.get('published', []) if p.get('local_date') == local_day]
+    if len(today_posts) >= max_per_day:
+        return None, 'Já foi publicado o limite de posts nesta data.'
+    if slot is not None and any(p.get('slot') in (None, slot) for p in today_posts):
+        return None, 'Já foi publicado neste horario, ou existe uma publicacao sem horario registrado.'
     reserved = {entry['id'] for entry in scheduled}
     published = {entry['id'] for entry in state.get('published', [])}
     for post in posts:
@@ -119,12 +128,26 @@ def manual_early_test_allowed(day, post_id):
 def reserve_for_day(now):
     day = now.astimezone(TZ).date().isoformat()
     posts, state = load_json(POSTS_FILE), load_json(STATE_FILE)
+    agenda = read_schedule()
+    event = os.getenv('GITHUB_EVENT_NAME', '')
+    slot = None
+    if event == 'schedule':
+        slot = due_slot(agenda, now)
+        if slot is None:
+            print('Agenda pausada ou horario nao corresponde: nao reservar.')
+            return None
+    elif event == 'workflow_dispatch' and os.getenv('MANUAL_TEST_POST_ID') != '002':
+        print('O robo diario nao publica por acionamento manual; use o teste separado.')
+        return None
     # A regra geral de inicio permanece 13/11. Apenas o fluxo manual de 11/11
     # pode reservar o post 002 antes da data. Agendamentos e duplicacoes seguem protegidos.
     selection_state = dict(state)
     if manual_early_test_allowed(day, '002'):
         selection_state['not_before_date'] = day
-    post, reason = select_next(posts, selection_state, day)
+    post, reason = select_next(
+        posts, selection_state, day,
+        max_per_day=len(agenda['times']), slot=slot
+    )
     if post and os.getenv('MANUAL_TEST_POST_ID') and post['id'] != os.getenv('MANUAL_TEST_POST_ID'):
         raise RuntimeError('Post reservado nao corresponde ao teste manual autorizado.')
     if not post:
@@ -136,6 +159,8 @@ def reserve_for_day(now):
         'id': post['id'], 'local_date': day,
         'reserved_at': datetime.now(timezone.utc).isoformat()
     }
+    if slot:
+        state['pending']['slot'] = slot
     save_state(state)
     print(f'Post #{post["id"]} reservado. O historico DEVE ser enviado ao GitHub antes de publicar.')
     return post
@@ -168,6 +193,11 @@ def run(*, publish=False, reserve=False, now=None, session=None):
         return None
     if pending.get('local_date') != local_day:
         raise RuntimeError('Reserva de outra data: revise manualmente antes de continuar.')
+    if pending.get('slot'):
+        agenda = read_schedule()
+        expected_slot = due_slot(agenda, now)
+        if expected_slot != pending['slot']:
+            raise RuntimeError('Agenda alterada ou horario expirou; revisar reserva antes de publicar.')
     post = next((p for p in posts if p['id'] == pending.get('id') and p.get('approved')), None)
     if not post:
         raise RuntimeError('Post reservado nao encontrado ou perdeu aprovacao.')
@@ -176,9 +206,16 @@ def run(*, publish=False, reserve=False, now=None, session=None):
         raise RuntimeError(f'Publicacao antes de {start} proibida.')
     if any(e.get('date') == local_day for e in state.get('externally_scheduled', [])):
         raise RuntimeError('Data reservada para publicacao manual.')
-    if any(e.get('local_date') == local_day or e.get('id') == post['id']
-           for e in state.get('published', [])):
-        raise RuntimeError('Post ou dia ja foi registrado como publicado.')
+    if any(e.get('id') == post['id'] for e in state.get('published', [])):
+        raise RuntimeError('Post ja foi registrado como publicado.')
+    today_posts = [e for e in state.get('published', []) if e.get('local_date') == local_day]
+    max_count = len(read_schedule()['times'])
+    if len(today_posts) >= max_count:
+        raise RuntimeError('Limite de posts por dia atingido.')
+    if pending.get('slot') and any(e.get('slot') in (None, pending['slot']) for e in today_posts):
+        raise RuntimeError('Ja houve publicacao neste horario, ou sem horario cadastrado.')
+    if not pending.get('slot') and today_posts:
+        raise RuntimeError('Publicacao manual adicional no mesmo dia bloqueada.')
 
     token = os.getenv('INSTAGRAM_ACCESS_TOKEN', '').strip()
     user_id = os.getenv('INSTAGRAM_USER_ID', '').strip()
@@ -195,14 +232,39 @@ def run(*, publish=False, reserve=False, now=None, session=None):
     # Se a chamada da Meta falhar, preservamos pending e BLOQUEAMOS proximas execucoes.
     # Nao repetir automaticamente, pois uma publicacao pode ter acontecido sem retorno.
     media_id = publish_image(post, url, user_id, token, version, session)
-    state.setdefault('published', []).append({
+    record = {
         'id': post['id'], 'media_id': media_id, 'local_date': local_day,
         'published_at': datetime.now(timezone.utc).isoformat()
-    })
+    }
+    if pending.get('slot'):
+        record['slot'] = pending['slot']
+    state.setdefault('published', []).append(record)
     del state['pending']
     save_state(state)
     print(f'Publicacao confirmada para o post #{post["id"]}.')
     return post
+
+
+def check_schedule(now=None):
+    """Pre-verificacao sem credenciais e sem escrita. GitHub Actions usa para pular execucoes fora da agenda."""
+    now = now or datetime.now(TZ)
+    agenda = read_schedule()
+    slot = due_slot(agenda, now)
+    if slot:
+        posts, state = load_json(POSTS_FILE), load_json(STATE_FILE)
+        today = now.astimezone(TZ).date().isoformat()
+        post, reason = select_next(posts, state, today, max_per_day=len(agenda['times']), slot=slot)
+        if post:
+            output = os.getenv('GITHUB_OUTPUT')
+            if output:
+                with open(output, 'a', encoding='utf-8') as handle:
+                    handle.write(f'ready=true\nslot={slot}\n')
+            print(f'Agenda liberou post #{post["id"]} no horario {slot}.')
+            return slot
+        print(f'Sem post elegivel: {reason}')
+    else:
+        print('Fora dos horarios de postagem ou agenda pausada.')
+    return None
 
 
 if __name__ == '__main__':
@@ -211,5 +273,9 @@ if __name__ == '__main__':
     g.add_argument('--dry-run', action='store_true', help='Apenas simula (padrao).')
     g.add_argument('--reserve', action='store_true', help='Reserva no historico; workflow deve gravar antes de publicar.')
     g.add_argument('--publish', action='store_true', help='Publica somente uma reserva ja salva no GitHub.')
+    g.add_argument('--check-schedule', action='store_true', help='Verifica agenda sem acessar a Meta.')
     args = p.parse_args()
-    run(publish=args.publish, reserve=args.reserve)
+    if args.check_schedule:
+        check_schedule()
+    else:
+        run(publish=args.publish, reserve=args.reserve)
