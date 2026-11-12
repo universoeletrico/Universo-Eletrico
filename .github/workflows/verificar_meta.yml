@@ -1,0 +1,59 @@
+
+name: Verificar conexao com Instagram
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Testar API Meta sem publicar
+        env:
+          IG_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
+          IG_ID: ${{ secrets.INSTAGRAM_USER_ID }}
+        run: |
+          python - <<'PY'
+          import os
+          import json
+          import sys
+          import urllib.request
+          import urllib.error
+
+          token = os.getenv("IG_TOKEN", "").strip()
+          ig_id = os.getenv("IG_ID", "").strip()
+
+          if not token or not ig_id.isdecimal():
+              sys.exit("Credenciais ausentes ou ID invalido.")
+
+          url = (
+              f"https://graph.facebook.com/v27.0/{ig_id}"
+              "?fields=id,username"
+          )
+
+          request = urllib.request.Request(
+              url,
+              headers={"Authorization": f"Bearer {token}"}
+          )
+
+          try:
+              with urllib.request.urlopen(
+                  request, timeout=20
+              ) as response:
+                  data = json.load(response)
+          except urllib.error.HTTPError as error:
+              sys.exit(f"Erro da Meta: HTTP {error.code}")
+          except Exception:
+              sys.exit("Falha na conexao com a Meta.")
+
+          if data.get("username") != "universoeletrico.br":
+              sys.exit("Conta do Instagram nao corresponde.")
+
+          print("Conexao com Instagram confirmada!")
+          print("Perfil: @universoeletrico.br")
+          print("Nenhuma publicacao foi realizada.")
+          PY
