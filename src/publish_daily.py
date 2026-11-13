@@ -15,6 +15,7 @@ from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).resolve().parents[1]
 POSTS_FILE = ROOT / 'content' / 'posts.json'
+CAMPAIGNS_FILE = ROOT / 'content' / 'commercial_campaigns.json'
 STATE_FILE = ROOT / 'content' / 'state.json'
 TZ = ZoneInfo('America/Sao_Paulo')
 
@@ -25,8 +26,49 @@ except ModuleNotFoundError:
 
 
 
+def ready_commercial_posts():
+    """Obtém somente campanhas autorizadas, com link e arte disponível.
+
+    O arquivo de campanhas é separado para não modificar a fila educativa,
+    e a leitura não acrescenta chamadas ao helper load_json nos testes.
+    """
+    if not CAMPAIGNS_FILE.exists():
+        return []
+    from painel.affiliates import validate_affiliate_url, require_disclosure
+    document = json.loads(CAMPAIGNS_FILE.read_text(encoding='utf-8'))
+    if not isinstance(document, dict) or not isinstance(document.get('campaigns'), list):
+        raise ValueError('Arquivo de campanhas comerciais inválido.')
+    posts = []
+    seen = set()
+    for entry in document['campaigns']:
+        if entry.get('status') != 'queued':
+            continue
+        pid = str(entry.get('id', ''))
+        if not (len(pid) == 4 and pid.startswith('C') and pid[1:].isdigit()) or pid in seen:
+            raise ValueError('Identificador de campanha inválido ou duplicado.')
+        seen.add(pid)
+        link = validate_affiliate_url(entry.get('affiliate_url', ''), 'mercadolivre')
+        caption = entry.get('caption', '')
+        require_disclosure(caption)
+        # Evita publicar uma campanha se o JPEG ainda não foi gerado.
+        if not (ROOT / 'docs' / 'posts' / f'{pid}.jpg').exists():
+            continue
+        posts.append({
+            'id': pid, 'kind': 'commercial', 'approved': True,
+            'title': entry['name'], 'hook': entry['hook'],
+            'body': entry['body'], 'caption': caption,
+            'affiliate_url': link,
+        })
+    return posts
+
+
 def load_json(path: Path):
-    return json.loads(path.read_text(encoding='utf-8'))
+    data = json.loads(path.read_text(encoding='utf-8'))
+    if path == POSTS_FILE:
+        if not isinstance(data, list):
+            raise ValueError('Fila de posts educativos inválida.')
+        return data + ready_commercial_posts()
+    return data
 
 
 def save_state(state):
@@ -53,9 +95,22 @@ def select_next(posts, state, local_day, max_per_day=1, slot=None):
         return None, 'Já foi publicado neste horario, ou existe uma publicacao sem horario registrado.'
     reserved = {entry['id'] for entry in scheduled}
     published = {entry['id'] for entry in state.get('published', [])}
-    for post in posts:
-        if post.get('approved', False) and post['id'] not in (published | reserved):
-            return post, None
+    eligible = [post for post in posts
+                if post.get('approved', False) and post['id'] not in (published | reserved)]
+    educational = [post for post in eligible if post.get('kind') != 'commercial']
+    commercial = [post for post in eligible if post.get('kind') == 'commercial']
+
+    if educational and commercial:
+        # Alterna sem alterar a programação: um post educativo, depois
+        # uma indicação comercial. Reserva, histórico e limites permanecem.
+        last_id = next((str(entry.get('id', '')) for entry in reversed(state.get('published', []))
+                        if entry.get('id')), '')
+        next_group = commercial if not last_id.startswith('C') else educational
+        return next_group[0], None
+    if educational:
+        return educational[0], None
+    if commercial:
+        return commercial[0], None
     return None, 'Fila de posts aprovados vazia. Revise e aprove novas artes.'
 
 
