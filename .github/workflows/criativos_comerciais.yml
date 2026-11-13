@@ -1,0 +1,50 @@
+name: Universo Eletrico - Criativos Comerciais
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'content/commercial_campaigns.json'
+      - 'src/generate_commercial_art.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: instagram-universo-eletrico
+  cancel-in-progress: false
+
+jobs:
+  artes-comerciais:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - name: Baixar repositorio
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Preparar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Instalar Pillow
+        run: pip install 'Pillow>=10,<13'
+
+      - name: Gerar criativos 1080x1350
+        run: python src/generate_commercial_art.py
+
+      - name: Salvar imagens prontas no repositorio
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/posts/C*.jpg
+          if git diff --cached --quiet; then
+            echo 'Nenhuma arte alterada.'
+            exit 0
+          fi
+          git commit -m 'Gerar criativos comerciais para o Universo Eletrico'
+          git pull --rebase origin main
+          git push origin HEAD:main
