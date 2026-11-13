@@ -158,3 +158,14 @@
 .radar-connect-btn{display:inline-flex;width:100%;justify-content:center;margin:0 0 14px}
 @media(max-width:1080px){.meli-connect-layout{grid-template-columns:1fr}}
 @media(max-width:600px){.meli-connect-layout>.editor-card{padding:17px}}
+
+/* Radar - curadoria privada e revisao de campanhas */
+.radar-actions{display:flex;align-items:center;flex-wrap:wrap;gap:10px 13px}
+.radar-action-form{display:inline-flex;align-items:center;margin:0}
+.radar-action-form .button{font-size:12px;padding:8px 11px;border-radius:8px}
+.radar-remove-btn{background:transparent;color:#d5b1a8;border:1px solid #715a58;border-radius:7px;padding:7px 10px;font-size:12px}
+.radar-remove-btn:hover{color:#fff;background:#4e3035}
+.radar-shortlist{border-color:#34586c}
+.radar-shortlist .radar-api-product:first-of-type{margin-top:12px}
+.radar-api-product .status{display:inline-flex;width:max-content}
+@media(max-width:480px){.radar-actions{align-items:flex-start;flex-direction:column}}
