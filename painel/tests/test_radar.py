@@ -11,7 +11,7 @@ os.environ.setdefault("PANEL_SESSION_SECRET", "segredo-apenas-teste")
 os.environ.setdefault("PANEL_PASSWORD_HASH", "hash-apenas-teste")
 
 import app as studio
-from research import editorial_ideas, search_url, search_official_catalog, catalogue_interest
+from research import editorial_ideas, search_url, search_official_catalog, catalogue_interest, catalogue_category
 
 
 class TestRadar(unittest.TestCase):
@@ -86,6 +86,113 @@ class TestRadar(unittest.TestCase):
         self.assertEqual(r.status_code, 200)
         self.assertIn(b"A API negou", r.data)
         self.assertNotIn(b"segredo-secreto", r.data)
+
+
+    def test_categoria_de_catalogo_coerente_com_titulo(self):
+        expected = {
+            "Livro de automação industrial": "Livros e cursos",
+            "Sensor Indutivo PNP": "Sensores industriais",
+            "CLP Siemens Compacto": "CLP e automação",
+            "Kit Arduino Uno": "Arduino e eletrônica",
+            "Organizador de cabos": "Organização e estudo",
+            "Disjuntor bifásico": "Componentes elétricos",
+        }
+        for title, category in expected.items():
+            self.assertEqual(catalogue_category(title), category)
+
+    def test_selecionar_nao_cria_campanha_nem_publica(self):
+        self.authorize()
+        observed = []
+        def fake_save(change, group="products"):
+            self.assertEqual(group, "radar_selections")
+            items = []
+            result = change(items)
+            observed.extend(items)
+            return result
+        with patch.object(studio, "save_affiliate_change", side_effect=fake_save) as save:
+            r = self.client.post("/radar/selecionar", data={
+                "csrf": "csrf-teste", "catalog_id": "MLB123456",
+                "name": "Sensor industrial PNP", "q": "sensor"
+            })
+        self.assertEqual(r.status_code, 302)
+        self.assertIn("q=sensor", r.location)
+        save.assert_called_once()
+        self.assertEqual(observed[0]["catalog_id"], "MLB123456")
+        self.assertEqual(observed[0]["category"], "Sensores industriais")
+        self.assertNotIn("status", observed[0])
+        self.assertNotIn("affiliate_url", observed[0])
+
+    def test_radar_selecao_rejeita_duplicado(self):
+        self.authorize()
+        prior = [{"catalog_id": "MLB123", "name": "CLP Inicial",
+                  "category": "CLP e automação"}]
+        def fake_save(change, group="products"):
+            return change(prior)
+        with patch.object(studio, "save_affiliate_change", side_effect=fake_save):
+            r = self.client.post("/radar/selecionar", data={
+                "csrf": "csrf-teste", "catalog_id": "MLB123",
+                "name": "CLP Inicial"
+            }, follow_redirects=False)
+        self.assertEqual(r.status_code, 302)
+        self.assertEqual(len(prior), 1)
+        with self.client.session_transaction() as s:
+            messages = s.get("_flashes", [])
+        self.assertTrue(any("já está" in message for _, message in messages))
+
+    def test_radar_selecao_exige_csrf_e_id_oficial(self):
+        self.authorize()
+        with patch.object(studio, "save_affiliate_change") as save:
+            missing_csrf = self.client.post("/radar/selecionar", data={
+                "csrf": "invalido", "catalog_id": "MLB123", "name": "Sensor PNP"
+            })
+            invalid_id = self.client.post("/radar/selecionar", data={
+                "csrf": "csrf-teste", "catalog_id": "INVALID",
+                "name": "Sensor PNP"
+            })
+        self.assertEqual(missing_csrf.status_code, 400)
+        self.assertEqual(invalid_id.status_code, 302)
+        save.assert_not_called()
+
+    def test_lista_retorna_sem_campanhas_aprovadas(self):
+        self.authorize()
+        entry = {"catalog_id": "MLB123", "name": "Sensor industrial PNP",
+                 "category": "Sensores industriais", "selected_at": "2026-11-13"}
+        with patch.object(studio.meli_oauth, "configured", return_value=False), \\
+             patch.object(studio, "repo_json", side_effect=[
+                {"products": self.products, "radar_selections": [entry]}, self.posts
+             ]):
+            r = self.client.get("/radar")
+        self.assertEqual(r.status_code, 200)
+        self.assertIn(b"Sensor industrial PNP", r.data)
+        self.assertIn(b"Minha lista de pesquisa".upper(), r.data.upper())
+        self.assertIn(b"radar/remover", r.data)
+        self.assertIn(b"catalog_id=MLB123", r.data)
+
+    def test_remocao_nao_muda_produtos_aprovados(self):
+        self.authorize()
+        selections = [{"catalog_id": "MLB123", "name": "Sensor",
+                       "category": "Sensores industriais"}]
+        products = [{"id": "A001", "status": "approved"}]
+        def fake_save(change, group="products"):
+            self.assertEqual(group, "radar_selections")
+            return change(selections)
+        with patch.object(studio, "save_affiliate_change", side_effect=fake_save):
+            r = self.client.post("/radar/remover", data={
+                "csrf": "csrf-teste", "catalog_id": "MLB123"
+            })
+        self.assertEqual(r.status_code, 302)
+        self.assertEqual(selections, [])
+        self.assertEqual(products[0]["status"], "approved")
+
+    def test_radar_preenche_origem_no_rascunho(self):
+        self.authorize()
+        with patch.object(studio, "repo_json", return_value={"products": []}):
+            r = self.client.get(
+                "/afiliados?name=Sensor%20industrial%20PNP"
+                "&category=Sensores%20industriais&catalog_id=MLB12345")
+        self.assertEqual(r.status_code, 200)
+        self.assertIn(b"MLB12345", r.data)
+        self.assertIn(b"Produto vindo do Radar", r.data)
 
     def test_sugestoes_priorizam_temas_da_fila(self):
         result = editorial_ideas(self.products, self.posts, limit=12)
