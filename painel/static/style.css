@@ -169,3 +169,23 @@
 .radar-shortlist .radar-api-product:first-of-type{margin-top:12px}
 .radar-api-product .status{display:inline-flex;width:max-content}
 @media(max-width:480px){.radar-actions{align-items:flex-start;flex-direction:column}}
+
+/* Campanhas comerciais com arte pronta */
+.commercial-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px;margin-top:26px}
+.commercial-card{min-width:0;background:#14283b;border:1px solid #335069;border-radius:17px;overflow:hidden}
+.commercial-card-cover{background:#05192b;display:grid;place-items:center;padding:16px}
+.commercial-card-cover img{width:100%;max-width:360px;aspect-ratio:4/5;object-fit:contain;border-radius:12px}
+.commercial-card-info{padding:21px;display:grid;align-content:start;gap:13px}
+.commercial-card-info h2{font-size:19px;line-height:1.35;margin:4px 0 0}
+.commercial-card-info>p{font-size:13px;line-height:1.6;color:#c0d1dc;margin:0}
+.commercial-card-info .commercial-signal{font-size:11px;color:#9db7cb}
+.commercial-caption{border-top:1px solid #365169;border-bottom:1px solid #365169;padding:13px 0}
+.commercial-caption summary{cursor:pointer;color:#ffe29a;font-size:12px;font-weight:700}
+.commercial-caption pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;line-height:1.6;font-family:inherit;color:#c6d9e8}
+.commercial-card-info .affiliate-form{margin-top:2px}
+.commercial-linked{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;color:#9ce8cf;font-size:12px}
+.commercial-linked a{text-decoration:underline}
+.commercial-pause-btn{background:transparent;border:1px solid #7b5f47;color:#e3c6a7;border-radius:8px;font-size:12px;padding:10px 12px}
+.commercial-pause-btn:hover{background:#4a382f}
+@media(max-width:820px){.commercial-grid{grid-template-columns:1fr}}
+@media(max-width:480px){.commercial-card-info{padding:15px}.commercial-card-cover img{max-width:300px}}
