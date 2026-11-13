@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Campanhas prontas · Universo Elétrico{% endblock %}
+{% block content %}
+<div class="heading-row">
+  <div>
+    <div class="eyebrow">MONETIZAÇÃO / CURADORIA DE PRODUTOS</div>
+    <h1>Campanhas prontas <span class="bolt">⚡</span></h1>
+    <p>Produtos de automação selecionados, descrições preparadas e criativos 1080 × 1350. Insira seu link oficial de afiliado para liberar cada campanha na fila alternada.</p>
+  </div>
+  <a href="{{ url_for('product_radar') }}" class="button outline">← Radar de Produtos</a>
+</div>
+
+<div class="metrics">
+  <div class="metric"><small>Campanhas preparadas</small><strong>{{ campaigns|length }}</strong><span>Com texto e arte original</span></div>
+  <div class="metric"><small>Aguardando link</small><strong>{{ waiting }}</strong><span>Não são publicadas</span></div>
+  <div class="metric"><small>Na fila comercial</small><strong>{{ queued }}</strong><span>Intercaladas com educação</span></div>
+</div>
+
+<div class="radar-note">
+  <strong>Como vai funcionar</strong>
+  <p>Revise o anúncio, gere o link pelo seu programa oficial do Mercado Livre e cole no campo da campanha. Ao clicar em <strong>Colocar na fila</strong>, você confirma a indicação e autoriza a publicação futura intercalada com os posts educativos. O robô segue a agenda existente; não publica imediatamente. Cada campanha é publicada no máximo uma vez.</p>
+  <p>Os produtos foram escolhidos por sinais de procura exibidos nas páginas do Mercado Livre, não por um ranking geral auditado. Preços, estoque e comissão podem mudar; os criativos são ilustrativos.</p>
+</div>
+
+<div class="commercial-grid">
+  {% for campaign in campaigns %}
+  <article class="commercial-card">
+    <div class="commercial-card-cover">
+      <img src="{{ media_base }}{{ campaign.id }}.jpg" alt="Criativo ilustrativo da campanha {{ campaign.name }}" loading="lazy">
+    </div>
+    <div class="commercial-card-info">
+      <div class="row-top">
+        <span class="code">{{ campaign.id }} · {{ campaign.category }}</span>
+        {% if campaign.published_to_instagram %}
+          <span class="status published">Publicado no Instagram</span>
+        {% elif campaign.reserved %}
+          <span class="status approved">Reservado pelo robô</span>
+        {% elif campaign.status == 'queued' %}
+          <span class="status approved">Na fila comercial</span>
+        {% elif campaign.status == 'paused' %}
+          <span class="status draft">Pausado</span>
+        {% else %}
+          <span class="status draft">Aguardando seu link</span>
+        {% endif %}
+      </div>
+      <h2>{{ campaign.name }}</h2>
+      <p>{{ campaign.description }}</p>
+      <p class="commercial-signal">Sinal público de procura: {{ campaign.sales_signal }}. Confirme as condições atuais do anúncio.</p>
+      <a class="small-link" href="{{ campaign.source_url }}" target="_blank" rel="noopener noreferrer nofollow">Pesquisar o produto no Mercado Livre ↗</a>
+
+      <details class="commercial-caption">
+        <summary>Ver legenda pronta para o Instagram</summary>
+        <pre>{{ campaign.caption }}</pre>
+      </details>
+
+      {% if campaign.status != 'queued' and not campaign.published_to_instagram and not campaign.reserved %}
+        <form method="post" action="{{ url_for('commercial_activate', cid=campaign.id) }}" class="affiliate-form">
+          <input type="hidden" name="csrf" value="{{ csrf() }}">
+          <label>Seu link oficial de afiliado
+            <input type="url" name="affiliate_url" placeholder="https://meli.la/..." maxlength="1200" value="{{ campaign.affiliate_url }}" required>
+          </label>
+          {% if writable %}
+            <button class="button primary full" type="submit">✓ Colocar na fila de postagens</button>
+          {% else %}
+            <p class="notice">A gravação no GitHub está temporariamente indisponível.</p>
+            <button class="button outline full" type="button" disabled>Fila indisponível</button>
+          {% endif %}
+          <small>Este clique confirma que o link foi gerado pela sua conta de afiliado e que você revisou a campanha.</small>
+        </form>
+      {% else %}
+        <div class="commercial-linked">
+          {% if campaign.affiliate_url %}
+            <span>Link de afiliado cadastrado.</span>
+            <a href="{{ campaign.affiliate_url }}" target="_blank" rel="noopener noreferrer nofollow sponsored">Conferir produto ↗</a>
+          {% else %}
+            <span>Verifique a conexão com o catálogo.</span>
+          {% endif %}
+        </div>
+        {% if campaign.status == 'queued' and not campaign.published_to_instagram and not campaign.reserved and writable %}
+          <form method="post" action="{{ url_for('commercial_pause', cid=campaign.id) }}">
+            <input type="hidden" name="csrf" value="{{ csrf() }}">
+            <button class="commercial-pause-btn" type="submit">Pausar esta campanha</button>
+          </form>
+        {% endif %}
+      {% endif %}
+    </div>
+  </article>
+  {% endfor %}
+</div>
+
+<div class="info-strip"><strong>Agenda:</strong> os produtos comerciais entram somente após o envio do link e seguem a configuração existente em <a href="{{ url_for('agenda') }}">Programar postagens</a>. A imagem do produto é uma ilustração original, não a foto do anúncio. Na legenda há #Publicidade e indicação da vitrine do perfil.</div>
+{% endblock %}
