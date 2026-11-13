@@ -541,7 +541,7 @@ def radar_select():
     keyword = request.form.get("q", "").strip()[:70]
     try:
         product_id = request.form.get("catalog_id", "").strip()
-        if not re.fullmatch(r"MLB\\d{1,20}", product_id):
+        if not re.fullmatch(r"MLB\d{1,20}", product_id):
             raise ValueError("Identificador de catálogo inválido.")
         name = clean_string(request.form.get("name", ""), "Nome do produto", 140, 6)
         category = catalogue_category(name)
@@ -572,7 +572,7 @@ def radar_remove():
     """Remove uma pesquisa selecionada sem alterar campanhas ja cadastradas."""
     validate_csrf()
     product_id = request.form.get("catalog_id", "").strip()
-    if not re.fullmatch(r"MLB\\d{1,20}", product_id):
+    if not re.fullmatch(r"MLB\d{1,20}", product_id):
         abort(400)
 
     try:
@@ -721,7 +721,7 @@ def affiliates_page():
     prefill_description = (
         f"Referência de catálogo Mercado Livre: {catalog_id}. "
         "Confira as especificações no anúncio real e gere seu link oficial de afiliado."
-        if re.fullmatch(r"MLB\\d{1,20}", catalog_id) else ""
+        if re.fullmatch(r"MLB\d{1,20}", catalog_id) else ""
     )
     return render_template(
         "affiliates.html", tab="afiliados", products=products,
