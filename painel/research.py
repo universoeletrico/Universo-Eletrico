@@ -105,6 +105,25 @@ def editorial_ideas(products, educational_posts, limit=12):
     return results[:limit]
 
 
+
+def catalogue_category(title):
+    """Sugere categoria do Studio pelo titulo, sem afirmar dados do anuncio."""
+    low = normalize(title)
+    if any(term in low for term in ("livro", "manual", "apostila", "curso", "didatico impresso")):
+        return "Livros e cursos"
+    if any(term in low for term in ("organizador", "etiqueta", "estojo", "maleta", "armazenamento")):
+        return "Organização e estudo"
+    if any(term in low for term in ("sensor", "encoder", "proximidade", "fotoeletrico")):
+        return "Sensores industriais"
+    if any(term in low for term in ("clp", "controlador logico", "ladder", "profinet", "modbus",
+                                    "inversor de frequencia", "automacao industrial", "ihm")):
+        return "CLP e automação"
+    if any(term in low for term in ("arduino", "eletronica", "protoboard", "esp32", "raspberry",
+                                    "resistor", "microcontrolador")):
+        return "Arduino e eletrônica"
+    return "Componentes elétricos"
+
+
 def search_official_catalog(keyword, token, http=None):
     """Pesquisa produto de catalogo com token da aplicacao, nunca anuncio nem afiliacao.
 
@@ -141,6 +160,7 @@ def search_official_catalog(keyword, token, http=None):
             continue
         seen.add(pid)
         items.append({"id": pid, "title": title[:140], "relevant": catalogue_interest(title),
+                      "category": catalogue_category(title),
                       "status": str(item.get("status") or "")})
     items.sort(key=lambda x: (not x["relevant"], x["title"]))
     return items
