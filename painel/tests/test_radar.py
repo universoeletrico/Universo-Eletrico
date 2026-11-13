@@ -158,7 +158,8 @@ class TestRadar(unittest.TestCase):
         self.authorize()
         entry = {"catalog_id": "MLB123", "name": "Sensor industrial PNP",
                  "category": "Sensores industriais", "selected_at": "2026-11-13"}
-        with patch.object(studio.meli_oauth, "configured", return_value=False), \
+        with patch.dict(os.environ, {"GITHUB_WRITE_TOKEN": "token-teste"}), \
+             patch.object(studio.meli_oauth, "configured", return_value=False), \
              patch.object(studio, "repo_json", side_effect=[
                 {"products": self.products, "radar_selections": [entry]}, self.posts
              ]):
