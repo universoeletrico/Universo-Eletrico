@@ -8,6 +8,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import urljoin, urlsplit
@@ -18,6 +19,8 @@ POSTS_FILE = ROOT / 'content' / 'posts.json'
 CAMPAIGNS_FILE = ROOT / 'content' / 'commercial_campaigns.json'
 STATE_FILE = ROOT / 'content' / 'state.json'
 TZ = ZoneInfo('America/Sao_Paulo')
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 try:
     from src.schedule_rules import read_schedule, due_slot
@@ -105,7 +108,7 @@ def select_next(posts, state, local_day, max_per_day=1, slot=None):
         # uma indicação comercial. Reserva, histórico e limites permanecem.
         last_id = next((str(entry.get('id', '')) for entry in reversed(state.get('published', []))
                         if entry.get('id')), '')
-        next_group = commercial if not last_id.startswith('C') else educational
+        next_group = educational if not last_id or last_id.startswith('C') else commercial
         return next_group[0], None
     if educational:
         return educational[0], None
