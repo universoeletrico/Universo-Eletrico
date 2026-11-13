@@ -9,6 +9,7 @@ import functools
 import hmac
 import json
 import os
+import re
 import secrets
 import time
 from datetime import datetime, timezone
@@ -41,10 +42,10 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 from src.schedule_rules import DAYS, validate_schedule, upcoming
 from painel.affiliates import (
-    CATEGORIES, IDEAS, MARKETPLACES, draft_caption, marketplace_name,
+    CATEGORIES, IDEAS, MARKETPLACES, clean_string, draft_caption, marketplace_name,
     new_id, normalize_product, require_disclosure, timestamp
 )
-from painel.research import editorial_ideas, search_official_catalog, search_url
+from painel.research import catalogue_category, editorial_ideas, search_official_catalog, search_url
 from painel import meli_oauth
 MEDIA = "https://universoeletrico.github.io/Universo-Eletrico/posts/"
 LOGO = "https://raw.githubusercontent.com/universoeletrico/Universo-Eletrico/main/assets/logo-original.png"
@@ -454,12 +455,17 @@ def affiliate_catalog():
     return catalog["products"]
 
 
-def save_affiliate_change(change):
-    """Atualiza produtos em um unico commit GitHub, com protecao de versao (SHA)."""
+def save_affiliate_change(change, group="products"):
+    """Atualiza produtos ou selecoes em commit GitHub com protecao SHA."""
     catalog, sha = github_file("content/affiliate_products.json")
     if (not isinstance(catalog, dict) or not isinstance(catalog.get("products"), list)):
         raise ValueError("Catalogo de produtos invalido.")
-    result = change(catalog["products"])
+    if group not in {"products", "radar_selections"}:
+        raise ValueError("Grupo de dados inválido.")
+    target = catalog.setdefault("radar_selections", []) if group == "radar_selections" else catalog["products"]
+    if not isinstance(target, list):
+        raise ValueError("Lista de registros inválida.")
+    result = change(target)
     payload = {
         "message": "painel: revisar catalogo e campanhas de afiliados",
         "content": base64.b64encode(
@@ -484,7 +490,14 @@ def save_affiliate_change(change):
 @login_required
 def product_radar():
     """Curadoria sem publicacao: sugestoes editoriais + catalogo oficial opcional."""
-    products = affiliate_catalog()
+    catalog = repo_json("content/affiliate_products.json")
+    if not isinstance(catalog, dict) or not isinstance(catalog.get("products"), list):
+        raise ValueError("Catálogo de afiliados inválido.")
+    products = catalog["products"]
+    selected = catalog.get("radar_selections", [])
+    if not isinstance(selected, list):
+        raise ValueError("Lista de pesquisa inválida.")
+    selected_ids = {item.get("catalog_id") for item in selected if isinstance(item, dict)}
     approved_posts = repo_json("content/posts.json")
     ideas = editorial_ideas(products, approved_posts, limit=12)
     keyword = request.args.get("q", "").strip()[:80]
@@ -513,10 +526,70 @@ def product_radar():
         issue = "Conecte primeiro sua aplicação do Mercado Livre ao Studio."
     return render_template(
         "radar.html", tab="radar", ideas=ideas, keyword=keyword,
+        selected=selected, selected_ids=selected_ids,
         catalog_results=results, api_configured=api_configured,
         account_connected=account_connected,
         catalog_error=issue, search_url=search_url
     )
+
+
+@app.post("/radar/selecionar")
+@login_required
+def radar_select():
+    """Guarda somente uma referencia privada de pesquisa; nao cria campanha."""
+    validate_csrf()
+    keyword = request.form.get("q", "").strip()[:70]
+    try:
+        product_id = request.form.get("catalog_id", "").strip()
+        if not re.fullmatch(r"MLB\\d{1,20}", product_id):
+            raise ValueError("Identificador de catálogo inválido.")
+        name = clean_string(request.form.get("name", ""), "Nome do produto", 140, 6)
+        category = catalogue_category(name)
+
+        def add_shortlist(items):
+            if len(items) >= 120:
+                raise ValueError("Limite de 120 produtos selecionados atingido.")
+            if any(item.get("catalog_id") == product_id for item in items):
+                raise ValueError("Esse produto já está na sua lista de pesquisa.")
+            items.append({
+                "catalog_id": product_id, "name": name, "category": category,
+                "selected_at": timestamp()
+            })
+            return product_id
+
+        save_affiliate_change(add_shortlist, group="radar_selections")
+        flash("Produto guardado na sua lista de pesquisa. Nenhuma campanha foi publicada.", "success")
+    except (ValueError, RuntimeError, requests.RequestException) as exc:
+        app.logger.warning("Selecao de pesquisa falhou: %s", type(exc).__name__)
+        flash(str(exc) if isinstance(exc, (ValueError, RuntimeError))
+              else "Não foi possível guardar esse produto no GitHub.", "error")
+    return redirect(url_for("product_radar", q=keyword) if keyword else url_for("product_radar"))
+
+
+@app.post("/radar/remover")
+@login_required
+def radar_remove():
+    """Remove uma pesquisa selecionada sem alterar campanhas ja cadastradas."""
+    validate_csrf()
+    product_id = request.form.get("catalog_id", "").strip()
+    if not re.fullmatch(r"MLB\\d{1,20}", product_id):
+        abort(400)
+
+    try:
+        def remove_shortlist(items):
+            found = next((idx for idx, x in enumerate(items)
+                          if x.get("catalog_id") == product_id), None)
+            if found is None:
+                raise ValueError("Produto não encontrado na lista de pesquisa.")
+            del items[found]
+            return product_id
+        save_affiliate_change(remove_shortlist, group="radar_selections")
+        flash("Produto retirado da lista de pesquisa.", "success")
+    except (ValueError, RuntimeError, requests.RequestException) as exc:
+        app.logger.warning("Remocao de pesquisa falhou: %s", type(exc).__name__)
+        flash(str(exc) if isinstance(exc, (ValueError, RuntimeError))
+              else "Não foi possível atualizar a lista.", "error")
+    return redirect(url_for("product_radar"))
 
 
 @app.get("/integracoes/mercado-livre")
@@ -644,12 +717,18 @@ def affiliates_page():
     initial_category = request.args.get("category", "").strip()[:90]
     if initial_category not in CATEGORIES:
         initial_category = CATEGORIES[0]
+    catalog_id = request.args.get("catalog_id", "").strip()
+    prefill_description = (
+        f"Referência de catálogo Mercado Livre: {catalog_id}. "
+        "Confira as especificações no anúncio real e gere seu link oficial de afiliado."
+        if re.fullmatch(r"MLB\\d{1,20}", catalog_id) else ""
+    )
     return render_template(
         "affiliates.html", tab="afiliados", products=products,
         stats=stats, marketplaces=MARKETPLACES,
         categories=CATEGORIES, ideas=IDEAS,
         prefill_name=initial_name, prefill_category=initial_category,
-        marketplace_name=marketplace_name
+        prefill_description=prefill_description, marketplace_name=marketplace_name
     )
 
 
