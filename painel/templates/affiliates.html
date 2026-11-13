@@ -67,8 +67,11 @@
         <label>Link oficial de afiliado
           <input type="url" name="affiliate_url" placeholder="https://meli.la/..." maxlength="1200" required>
         </label>
+        {% if prefill_description %}
+          <p class="affiliate-help"><strong>Produto vindo do Radar.</strong> Confira o anúncio real, gere seu link de afiliado e revise a campanha antes de aprovar.</p>
+        {% endif %}
         <label>Observações (opcional)
-          <textarea name="description" rows="3" maxlength="700" placeholder="O que conferir no anúncio antes de recomendar?"></textarea>
+          <textarea name="description" rows="3" maxlength="700" placeholder="O que conferir no anúncio antes de recomendar?">{{ prefill_description }}</textarea>
         </label>
         {% if writable %}
         <button class="button primary full" type="submit">Criar campanha para revisão →</button>
