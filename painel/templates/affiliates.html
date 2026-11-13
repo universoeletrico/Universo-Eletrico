@@ -16,6 +16,7 @@
   <div class="metric"><small>Rejeitados</small><strong>{{ stats.rejected }}</strong><span>Fora de circulação</span></div>
 </div>
 <div class="radar-shortcut"><div><strong>⚡ Radar de Produtos</strong><p>Encontre pautas relacionadas à elétrica e automação e inicie novas campanhas.</p></div><a href="{{ url_for('product_radar') }}" class="button outline">Pesquisar oportunidades →</a></div>
+<div class="radar-shortcut"><div><strong>🛒 Campanhas de automação prontas</strong><p>Produtos selecionados, legendas e artes preparadas. Basta cadastrar seu link de afiliado para entrar na fila intercalada com posts educativos.</p></div><a href="{{ url_for('commercial_page') }}" class="button primary">Ver campanhas prontas →</a></div>
 <div class="affiliate-layout">
   <section class="affiliate-main">
     <div class="section-head"><div><h2>Catálogo e campanhas</h2><p>Abra um produto para conferir o link, editar a legenda e aprovar.</p></div><span class="result-count">{{ products|length }} produto(s)</span></div>
