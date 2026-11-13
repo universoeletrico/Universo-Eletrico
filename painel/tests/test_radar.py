@@ -36,7 +36,8 @@ class TestRadar(unittest.TestCase):
 
     def test_radar_funciona_sem_token_de_api(self):
         self.authorize()
-        with patch.object(studio.meli_oauth, "configured", return_value=False), \
+        with patch.dict(os.environ, {"GITHUB_WRITE_TOKEN": "token-teste"}), \
+             patch.object(studio.meli_oauth, "configured", return_value=False), \
              patch.object(studio, "repo_json", side_effect=[
                  {"products": self.products}, self.posts
              ]), \
@@ -157,14 +158,14 @@ class TestRadar(unittest.TestCase):
         self.authorize()
         entry = {"catalog_id": "MLB123", "name": "Sensor industrial PNP",
                  "category": "Sensores industriais", "selected_at": "2026-11-13"}
-        with patch.object(studio.meli_oauth, "configured", return_value=False), \\
+        with patch.object(studio.meli_oauth, "configured", return_value=False), \
              patch.object(studio, "repo_json", side_effect=[
                 {"products": self.products, "radar_selections": [entry]}, self.posts
              ]):
             r = self.client.get("/radar")
         self.assertEqual(r.status_code, 200)
         self.assertIn(b"Sensor industrial PNP", r.data)
-        self.assertIn(b"Minha lista de pesquisa".upper(), r.data.upper())
+        self.assertIn(b"MINHA LISTA DE PESQUISA", r.data.upper())
         self.assertIn(b"radar/remover", r.data)
         self.assertIn(b"catalog_id=MLB123", r.data)
 
