@@ -17,8 +17,9 @@
       "sales_signal": "+5 mil vendidos exibidos",
       "source_checked_at": "2026-11-12",
       "marketplace": "mercadolivre",
-      "status": "waiting_link",
-      "affiliate_url": ""
+      "status": "queued",
+      "affiliate_url": "https://meli.la/1VEjGvD",
+      "approved_at": "2026-11-13T00:31:16-03:00"
     },
     {
       "id": "C002",
