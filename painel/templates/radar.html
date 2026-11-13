@@ -13,7 +13,7 @@
   <strong>Como funciona hoje</strong>
   <p>O radar prioriza sugestões de pesquisa por tema e evita repetir produtos já cadastrados.
   Estas pautas são <strong>ideias de busca</strong>, não anúncios ou ofertas verificadas.
-  Pesquise no marketplace, escolha um produto elegível, gere seu link oficial de afiliado e cadastre-o para aprovação.</p>
+  A busca oficial permite selecionar produtos para sua lista privada. Depois confira o anúncio real, gere seu link de afiliado e crie a campanha para aprovação. Nenhuma seleção publica produtos.</p>
 </div>
 <div class="radar-layout">
   <main class="radar-main">
@@ -70,20 +70,57 @@
       {% for result in catalog_results %}
       <div class="radar-api-product">
         <strong>{{ result.title }}</strong>
-        <span class="code">{{ result.id }}</span>
-        <a href="{{ url_for('affiliates_page', name=result.title, category='Arduino e eletrônica') }}" class="review-link">Preparar campanha →</a>
+        <span class="code">{{ result.id }} · {{ result.category or 'Componentes elétricos' }}</span>
+        <div class="radar-actions">
+          {% if result.id in selected_ids %}
+            <span class="status approved">✓ Já selecionado</span>
+          {% elif writable %}
+            <form method="post" action="{{ url_for('radar_select') }}" class="radar-action-form">
+              <input type="hidden" name="csrf" value="{{ csrf() }}">
+              <input type="hidden" name="catalog_id" value="{{ result.id }}">
+              <input type="hidden" name="name" value="{{ result.title }}">
+              <input type="hidden" name="q" value="{{ keyword }}">
+              <button type="submit" class="button outline">+ Guardar na lista</button>
+            </form>
+          {% else %}
+            <span class="affiliate-help">Seleção indisponível: configure a gravação do GitHub.</span>
+          {% endif %}
+          <a href="{{ url_for('affiliates_page', name=result.title, category=result.category or 'Componentes elétricos', catalog_id=result.id) }}" class="review-link">Preparar campanha →</a>
+        </div>
       </div>
       {% else %}
       <p class="affiliate-help">Nenhum produto retornou para esse termo. Tente outro assunto.</p>
       {% endfor %}
     </div>
     {% endif %}
+    <div class="editor-card radar-shortlist">
+      <div class="preview-label"><span>MINHA LISTA DE PESQUISA</span><span>{{ selected|length }} selecionados</span></div>
+      <p class="affiliate-help">Guarde aqui produtos de catálogo para conferir depois. Eles não entram na vitrine e não são campanhas aprovadas.</p>
+      {% for item in selected|reverse %}
+        <div class="radar-api-product">
+          <strong>{{ item.name }}</strong>
+          <span class="code">{{ item.catalog_id }} · {{ item.category }}</span>
+          <div class="radar-actions">
+            <a class="review-link" href="{{ url_for('affiliates_page', name=item.name, category=item.category, catalog_id=item.catalog_id) }}">Preparar campanha →</a>
+            {% if writable %}
+              <form method="post" action="{{ url_for('radar_remove') }}" class="radar-action-form">
+                <input type="hidden" name="csrf" value="{{ csrf() }}">
+                <input type="hidden" name="catalog_id" value="{{ item.catalog_id }}">
+                <button type="submit" class="radar-remove-btn">Remover da lista</button>
+              </form>
+            {% endif %}
+          </div>
+        </div>
+      {% else %}
+        <p class="affiliate-help">Sua lista está vazia. Consulte o catálogo oficial acima e selecione os produtos interessantes.</p>
+      {% endfor %}
+    </div>
     <div class="editor-card">
       <div class="preview-label"><span>PRÓXIMAS INTEGRAÇÕES</span><span>Planejamento</span></div>
-      <p class="affiliate-help">Futuras etapas: conectar pesquisa autorizada, analisar informações dos anúncios quando disponíveis, preparar criativos com IA e criar uma caixa de aprovação para campanhas.</p>
+      <p class="affiliate-help">Já é possível pesquisar o catálogo oficial e guardar seleções. Futuras etapas: analisar anúncios com dados permitidos, preparar criativos comerciais com IA e aprimorar a aprovação das campanhas.</p>
       <p class="affiliate-help"><strong>Importante:</strong> não fazemos coleta automatizada das páginas dos marketplaces nem geramos links de afiliados sem uma integração permitida.</p>
     </div>
   </aside>
 </div>
-<div class="info-strip"><strong>Fluxo seguro:</strong> pesquisar ideias → escolher anúncio e gerar link autorizado → revisar descrição e legenda → aprovar produto na vitrine. Publicação comercial no Instagram permanece separada.</div>
+<div class="info-strip"><strong>Fluxo seguro:</strong> pesquisar catálogo → guardar na lista privada → obter link de afiliado oficial → criar campanha em rascunho → revisar e aprovar. Publicação comercial no Instagram permanece separada.</div>
 {% endblock %}
