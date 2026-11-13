@@ -172,11 +172,19 @@ def secure_headers(res):
     res.headers["X-Frame-Options"] = "DENY"
     res.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     res.headers["Cache-Control"] = "no-store"
+    # Chrome pode bloquear o redirect OAuth feito depois de POST quando
+    # form-action permite somente 'self'. Liberamos o dominio oficial apenas
+    # nas rotas de integracao; todo o restante do painel permanece restrito.
+    form_action = (
+        "form-action 'self' https://auth.mercadolivre.com.br;"
+        if request.endpoint in {"meli_integration", "meli_connect"}
+        else "form-action 'self';"
+    )
     res.headers["Content-Security-Policy"] = (
         "default-src 'self'; script-src 'none'; "
         "style-src 'self'; img-src 'self' https://universoeletrico.github.io "
         "https://raw.githubusercontent.com data:; connect-src 'self'; "
-        "form-action 'self'; frame-ancestors 'none'; base-uri 'self'"
+        + form_action + " frame-ancestors 'none'; base-uri 'self'"
     )
     return res
 
