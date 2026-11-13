@@ -56,7 +56,9 @@ class TestAffiliates(unittest.TestCase):
         self.assertIn(b"Legenda para campanha", response.data)
 
     def test_vitrine_nao_expoe_produto_sem_aprovacao(self):
-        with patch.object(studio, "repo_json", return_value={"products": [self.product]}):
+        with patch.object(studio, "repo_json", side_effect=[
+            {"products": [self.product]}, {"campaigns": []}
+        ]):
             response = self.client.get("/vitrine")
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Novas indica", response.data)
@@ -64,10 +66,11 @@ class TestAffiliates(unittest.TestCase):
 
     def test_vitrine_mostra_somente_aprovados(self):
         approved = {**self.product, "status": "approved"}
-        with patch.object(studio, "repo_json", return_value={
-            "products": [approved, {**self.product, "id": "A002", "status": "rejected",
-                                    "affiliate_url": "https://meli.la/naopublicar"}]
-        }):
+        with patch.object(studio, "repo_json", side_effect=[
+            {"products": [approved, {**self.product, "id": "A002", "status": "rejected",
+                                    "affiliate_url": "https://meli.la/naopublicar"}]},
+            {"campaigns": []}
+        ]):
             response = self.client.get("/vitrine")
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"meli.la/2jbidad", response.data)
