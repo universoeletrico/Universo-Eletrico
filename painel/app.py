@@ -43,7 +43,7 @@ if str(ROOT) not in sys.path:
 from src.schedule_rules import DAYS, validate_schedule, upcoming
 from painel.affiliates import (
     CATEGORIES, IDEAS, MARKETPLACES, clean_string, draft_caption, marketplace_name,
-    new_id, normalize_product, require_disclosure, timestamp
+    new_id, normalize_product, require_disclosure, timestamp, validate_affiliate_url
 )
 from painel.research import catalogue_category, editorial_ideas, search_official_catalog, search_url
 from painel import meli_oauth
@@ -486,6 +486,116 @@ def save_affiliate_change(change, group="products"):
 
 
 
+def commercial_campaigns():
+    """Curadoria pública sem links ativos até a ação explícita do proprietário."""
+    raw = repo_json("content/commercial_campaigns.json")
+    if not isinstance(raw, dict) or not isinstance(raw.get("campaigns"), list):
+        raise ValueError("Arquivo de campanhas comerciais inválido.")
+    return raw["campaigns"]
+
+
+def save_commercial_change(change):
+    """Atualiza a curadoria comercial em um commit GitHub protegido por SHA."""
+    path = "content/commercial_campaigns.json"
+    document, sha = github_file(path)
+    rows = document.get("campaigns")
+    if not isinstance(rows, list):
+        raise ValueError("Campanhas comerciais inválidas.")
+    value = change(rows)
+    payload = {
+        "message": "studio: adicionar link afiliado e liberar campanha comercial",
+        "content": base64.b64encode(
+            (json.dumps(document, indent=2, ensure_ascii=False) + "\\n").encode("utf-8")
+        ).decode("ascii"),
+        "sha": sha, "branch": "main"
+    }
+    response = requests.put(API + path, headers=github_headers(write=True),
+                            json=payload, timeout=20)
+    if response.status_code in (409, 422):
+        raise ValueError("As campanhas foram atualizadas. Recarregue a página e tente novamente.")
+    response.raise_for_status()
+    invalidate(path)
+    return value
+
+
+@app.get("/campanhas")
+@login_required
+def commercial_page():
+    campaigns = commercial_campaigns()
+    state = repo_json("content/state.json")
+    published = {entry.get("id") for entry in state.get("published", [])}
+    pending = state.get("pending") or {}
+    for campaign in campaigns:
+        campaign["published_to_instagram"] = campaign["id"] in published
+        campaign["reserved"] = campaign["id"] == pending.get("id")
+    return render_template(
+        "commercial_campaigns.html", tab="campanhas",
+        campaigns=campaigns, media_base=MEDIA,
+        queued=sum(x.get("status") == "queued" and x["id"] not in published for x in campaigns),
+        waiting=sum(x.get("status") != "queued" for x in campaigns)
+    )
+
+
+@app.post("/campanhas/<cid>/ativar")
+@login_required
+def commercial_activate(cid):
+    """O envio do link é aprovação explícita para a fila, não postagem imediata."""
+    validate_csrf()
+    if not re.fullmatch(r"C\\d{3}", cid):
+        abort(404)
+    try:
+        link = validate_affiliate_url(request.form.get("affiliate_url", ""), "mercadolivre")
+        def activate(rows):
+            row = next((item for item in rows if item.get("id") == cid), None)
+            if row is None:
+                raise ValueError("Campanha comercial não encontrada.")
+            if row.get("status") == "queued":
+                raise ValueError("Campanha já está ativa na fila. Para alterar o link, solicite revisão.")
+            if not row.get("caption") or "#Publicidade" not in row["caption"]:
+                raise ValueError("A legenda precisa identificar a publicidade.")
+            row["affiliate_url"] = link
+            row["status"] = "queued"
+            row["approved_at"] = timestamp()
+            return row["id"]
+        save_commercial_change(activate)
+        flash("Link salvo! A campanha entrou na fila comercial alternada com os posts educativos.", "success")
+    except (ValueError, RuntimeError, requests.RequestException) as exc:
+        app.logger.warning("Falha ao ativar campanha: %s", type(exc).__name__)
+        flash(str(exc) if isinstance(exc, (ValueError, RuntimeError))
+              else "Falha na gravação do link no GitHub.", "error")
+    return redirect(url_for("commercial_page"))
+
+
+@app.post("/campanhas/<cid>/pausar")
+@login_required
+def commercial_pause(cid):
+    """Pausa uma campanha não publicada; a pausa não apaga o link."""
+    validate_csrf()
+    if not re.fullmatch(r"C\\d{3}", cid):
+        abort(404)
+    state, _ = github_file("content/state.json")
+    used = {x.get("id") for x in state.get("published", [])}
+    if state.get("pending"):
+        used.add(state["pending"].get("id"))
+    if cid in used:
+        flash("Esta campanha já foi publicada ou reservada. Não é possível retirá-la da fila.", "error")
+        return redirect(url_for("commercial_page"))
+    try:
+        def pause(rows):
+            row = next((x for x in rows if x.get("id") == cid), None)
+            if row is None or row.get("status") != "queued":
+                raise ValueError("Campanha não está ativa.")
+            row["status"] = "paused"
+            return row["id"]
+        save_commercial_change(pause)
+        flash("Campanha pausada. Ela não será selecionada pelo robô.", "success")
+    except (ValueError, RuntimeError, requests.RequestException) as exc:
+        app.logger.warning("Pausa de campanha falhou: %s", type(exc).__name__)
+        flash(str(exc) if isinstance(exc, (ValueError, RuntimeError))
+              else "Não foi possível pausar.", "error")
+    return redirect(url_for("commercial_page"))
+
+
 @app.get("/radar")
 @login_required
 def product_radar():
@@ -800,8 +910,19 @@ def affiliate_detail(pid):
 
 @app.get("/vitrine")
 def affiliate_storefront():
-    """Pagina publica somente de produtos explicitamente aprovados."""
+    """Vitrine pública: produtos aprovados + campanhas com link autorizado."""
     products = [p for p in affiliate_catalog() if p.get("status") == "approved"]
+    for row in commercial_campaigns():
+        if row.get("status") == "queued" and row.get("affiliate_url"):
+            try:
+                link = validate_affiliate_url(row["affiliate_url"], "mercadolivre")
+            except ValueError:
+                continue
+            products.append({
+                "id": row["id"], "name": row["name"],
+                "category": row["category"], "description": row["description"],
+                "marketplace": "mercadolivre", "affiliate_url": link
+            })
     response = render_template("vitrine.html", products=products,
                                marketplace_name=marketplace_name)
     return response
