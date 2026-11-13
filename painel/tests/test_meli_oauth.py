@@ -39,6 +39,34 @@ class TestMercadoLivreOAuth(unittest.TestCase):
             session["admin"] = True
             session["csrf"] = "csrf-teste"
 
+    def test_csp_permits_oauth_redirect_only_on_integration(self):
+        """Chrome bloqueia redirect externo depois de POST se form-action='self'."""
+        self.authorize()
+        with patch.dict(os.environ, {key: "" for key in meli_oauth.NECESSARY}):
+            integration = self.client.get("/integracoes/mercado-livre")
+        policy = integration.headers["Content-Security-Policy"]
+        self.assertEqual(integration.status_code, 200)
+        self.assertIn("form-action 'self' https://auth.mercadolivre.com.br;", policy)
+        self.assertIn("script-src 'none'", policy)
+        self.assertIn("frame-ancestors 'none'", policy)
+
+        with patch.object(studio, "repo_json", side_effect=[[], {"published": []}, {"days":[0,1,2,3,4,5,6],"times":["19:17"],"enabled": True,"timezone":"America/Sao_Paulo"}]):
+            dashboard = self.client.get("/")
+        regular_policy = dashboard.headers["Content-Security-Policy"]
+        self.assertIn("form-action 'self';", regular_policy)
+        self.assertNotIn("auth.mercadolivre.com.br", regular_policy)
+
+    def test_oauth_post_response_also_allows_official_auth(self):
+        self.authorize()
+        with patch.dict(os.environ, self.env):
+            response = self.client.post("/integracoes/mercado-livre/conectar", data={
+                "csrf": "csrf-teste", "confirm": "yes"
+            })
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(response.location.startswith("https://auth.mercadolivre.com.br/authorization?"))
+        self.assertIn("form-action 'self' https://auth.mercadolivre.com.br;",
+                      response.headers["Content-Security-Policy"])
+
     def test_integration_page_requires_login(self):
         self.assertEqual(self.client.get("/integracoes/mercado-livre").status_code, 302)
         self.assertIn("/login", self.client.get("/integracoes/mercado-livre").location)
