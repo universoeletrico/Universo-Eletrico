@@ -505,7 +505,7 @@ def save_commercial_change(change):
     payload = {
         "message": "studio: adicionar link afiliado e liberar campanha comercial",
         "content": base64.b64encode(
-            (json.dumps(document, indent=2, ensure_ascii=False) + "\\n").encode("utf-8")
+            (json.dumps(document, indent=2, ensure_ascii=False) + "\n").encode("utf-8")
         ).decode("ascii"),
         "sha": sha, "branch": "main"
     }
@@ -541,7 +541,7 @@ def commercial_page():
 def commercial_activate(cid):
     """O envio do link é aprovação explícita para a fila, não postagem imediata."""
     validate_csrf()
-    if not re.fullmatch(r"C\\d{3}", cid):
+    if not re.fullmatch(r"C\d{3}", cid):
         abort(404)
     try:
         link = validate_affiliate_url(request.form.get("affiliate_url", ""), "mercadolivre")
@@ -571,7 +571,7 @@ def commercial_activate(cid):
 def commercial_pause(cid):
     """Pausa uma campanha não publicada; a pausa não apaga o link."""
     validate_csrf()
-    if not re.fullmatch(r"C\\d{3}", cid):
+    if not re.fullmatch(r"C\d{3}", cid):
         abort(404)
     state, _ = github_file("content/state.json")
     used = {x.get("id") for x in state.get("published", [])}
