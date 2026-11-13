@@ -1,7 +1,7 @@
 {
   "version": 1,
   "updated_at": "2026-11-12",
-  "note": "Curadoria editorial com sinais de procura, não ranking oficial; links de afiliado devem ser fornecidos pelo titular. Nenhum anúncio comercial é habilitado sem link oficial.",
+  "note": "Curadoria feita a partir de indicadores de procura mostrados em anúncios e lojas, sem ranking geral auditado. Imagens são ilustrativas, sem preços. Só entra na fila após link fornecido pelo titular.",
   "campaigns": [
     {
       "id": "C001",
@@ -18,8 +18,7 @@
       "source_checked_at": "2026-11-12",
       "marketplace": "mercadolivre",
       "status": "waiting_link",
-      "affiliate_url": "",
-      "art_ready": false
+      "affiliate_url": ""
     },
     {
       "id": "C002",
@@ -36,8 +35,7 @@
       "source_checked_at": "2026-11-12",
       "marketplace": "mercadolivre",
       "status": "waiting_link",
-      "affiliate_url": "",
-      "art_ready": false
+      "affiliate_url": ""
     },
     {
       "id": "C003",
@@ -54,8 +52,7 @@
       "source_checked_at": "2026-11-12",
       "marketplace": "mercadolivre",
       "status": "waiting_link",
-      "affiliate_url": "",
-      "art_ready": false
+      "affiliate_url": ""
     },
     {
       "id": "C004",
@@ -72,8 +69,7 @@
       "source_checked_at": "2026-11-12",
       "marketplace": "mercadolivre",
       "status": "waiting_link",
-      "affiliate_url": "",
-      "art_ready": false
+      "affiliate_url": ""
     },
     {
       "id": "C005",
@@ -90,8 +86,7 @@
       "source_checked_at": "2026-11-12",
       "marketplace": "mercadolivre",
       "status": "waiting_link",
-      "affiliate_url": "",
-      "art_ready": false
+      "affiliate_url": ""
     },
     {
       "id": "C006",
@@ -108,8 +103,7 @@
       "source_checked_at": "2026-11-12",
       "marketplace": "mercadolivre",
       "status": "waiting_link",
-      "affiliate_url": "",
-      "art_ready": false
+      "affiliate_url": ""
     }
   ]
 }
