@@ -1,4 +1,5 @@
 import importlib.util
+import json
 import unittest
 from pathlib import Path
 from datetime import datetime
@@ -49,9 +50,13 @@ class TestPublisher(unittest.TestCase):
 
     def test_all_images_present(self):
         root=Path(__file__).resolve().parents[1]
-        posts=pub.load_json(root/'content'/'posts.json')
+        # O carregador do publicador combina posts educativos e campanhas
+        # comerciais aprovadas. O catálogo educativo, porém, tem 30 artes.
+        posts=json.loads((root/'content'/'posts.json').read_text(encoding='utf-8'))
         self.assertEqual(len(posts),30)
-        for p in posts:self.assertTrue((root/'docs'/'posts'/f"{p['id']}.jpg").exists())
+        self.assertEqual(len({p['id'] for p in posts}),len(posts))
+        for p in posts:
+            self.assertTrue((root/'docs'/'posts'/f"{p['id']}.jpg").exists())
 
     
     def test_mode_safe_when_unapproved(self):
