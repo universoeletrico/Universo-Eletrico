@@ -30,14 +30,16 @@ class TestManualEarly(unittest.TestCase):
              patch.dict(pub.os.environ, {'PUBLISH_ENABLED': 'false', 'MANUAL_TEST_POST_ID': ''}):
             self.assertIsNone(pub.run(publish=False, now=self.now))
 
-    def test_manual_reserves_only_post_002_on_11(self):
+    def test_historical_manual_override_cannot_reserve_early(self):
+        # A antiga exceção manual era exclusiva de 11/11 e não deve ser
+        # reativada por variáveis antigas após a data mínima da fila.
         with patch.object(pub, 'load_json', side_effect=[self.posts, self.state]), \
              patch.object(pub, 'save_state') as saved, \
              patch.dict(pub.os.environ, {'PUBLISH_ENABLED': 'true', 'MANUAL_TEST_POST_ID': '002'}):
             p = pub.reserve_for_day(self.now)
-        self.assertEqual(p['id'], '002')
-        self.assertEqual(self.state['pending']['id'], '002')
-        saved.assert_called_once()
+        self.assertIsNone(p)
+        self.assertNotIn('pending', self.state)
+        saved.assert_not_called()
 
     def test_manual_early_does_not_apply_to_nov12(self):
         other = datetime(2026, 11, 12, 12, 0, tzinfo=ZoneInfo('America/Sao_Paulo'))
