@@ -46,7 +46,7 @@ jobs:
 
       - name: Instalar dependencias
         if: steps.agenda.outputs.ready == 'true'
-        run: pip install -r requirements-publish.txt
+        run: pip install -r painel/requirements.txt
 
       - name: Executar testes de seguranca
         if: steps.agenda.outputs.ready == 'true'
