@@ -39,7 +39,8 @@ class TestImagePreview(unittest.TestCase):
 
     def test_gallery_links_to_studio_preview(self):
         post = {"id": "004", "title": "CLP", "approved": False}
-        with patch.object(studio, "repo_json", side_effect=[[post], {"published": [], "externally_scheduled": []}]):
+        with studio.app.test_request_context("/"), \
+             patch.object(studio, "repo_json", side_effect=[[post], {"published": [], "externally_scheduled": []}]):
             rows = studio.posts_with_status()
         self.assertEqual(rows[0]["image_url"], "/preview/004.jpg")
 
