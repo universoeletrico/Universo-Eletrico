@@ -49,10 +49,24 @@ def validate_schedule(raw):
     minutes = sorted(int(t[:2]) * 60 + int(t[3:]) for t in times)
     if any(b - a < 60 for a, b in zip(minutes, minutes[1:])):
         raise ValueError("Mantenha pelo menos uma hora entre as publicacoes.")
-    return {"timezone": "America/Sao_Paulo",
-            "enabled": raw["enabled"],
-            "days": sorted(days),
-            "times": sorted(times)}
+    # Restricao opcional de data: garante que uma autorizacao isolada
+    # nunca ative automaticamente a agenda das semanas seguintes.
+    only_date = raw.get("only_date")
+    if only_date is not None:
+        if not isinstance(only_date, str) or not re.fullmatch(r"\\d{4}-\\d{2}-\\d{2}", only_date):
+            raise ValueError("only_date deve estar no formato AAAA-MM-DD.")
+        try:
+            if datetime.strptime(only_date, "%Y-%m-%d").date().isoformat() != only_date:
+                raise ValueError("Data invalida.")
+        except ValueError as exc:
+            raise ValueError("only_date invalida.") from exc
+    result = {"timezone": "America/Sao_Paulo",
+              "enabled": raw["enabled"],
+              "days": sorted(days),
+              "times": sorted(times)}
+    if only_date is not None:
+        result["only_date"] = only_date
+    return result
 
 
 def read_schedule():
@@ -71,7 +85,10 @@ def slot_window_open(now, slot):
 
 def due_slot(raw_schedule, now):
     schedule = validate_schedule(raw_schedule)
-    if not schedule["enabled"] or now.astimezone(TZ).weekday() not in schedule["days"]:
+    local_day = now.astimezone(TZ).date()
+    if schedule.get("only_date") and local_day.isoformat() != schedule["only_date"]:
+        return None
+    if not schedule["enabled"] or local_day.weekday() not in schedule["days"]:
         return None
     return next((t for t in schedule["times"] if slot_window_open(now, t)), None)
 
@@ -83,7 +100,8 @@ def upcoming(raw_schedule, now=None, days_ahead=14):
     rows = []
     for i in range(days_ahead):
         day = day0 + timedelta(days=i)
-        if schedule["enabled"] and day.weekday() in schedule["days"]:
+        if (schedule["enabled"] and day.weekday() in schedule["days"]
+                and (not schedule.get("only_date") or day.isoformat() == schedule["only_date"])):
             rows.append({"date": day.strftime("%d/%m/%Y"),
                          "day_name": DAYS[day.weekday()],
                          "times": list(schedule["times"])})
