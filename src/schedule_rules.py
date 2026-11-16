@@ -60,12 +60,32 @@ def validate_schedule(raw):
                 raise ValueError("Data invalida.")
         except ValueError as exc:
             raise ValueError("only_date invalida.") from exc
+    # Uma lista fechada de datas permite autorizar dias consecutivos sem
+    # liberar a mesma segunda/terca-feira nas semanas seguintes.
+    only_dates = raw.get("only_dates")
+    if only_dates is not None:
+        if only_date is not None:
+            raise ValueError("Use only_date ou only_dates, nunca os dois.")
+        if not isinstance(only_dates, list) or not 1 <= len(only_dates) <= 31:
+            raise ValueError("only_dates deve conter de 1 a 31 datas.")
+        if len(set(str(d) for d in only_dates)) != len(only_dates):
+            raise ValueError("Datas repetidas em only_dates.")
+        for day in only_dates:
+            if not isinstance(day, str) or not re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}", day):
+                raise ValueError("Data em only_dates invalida.")
+            try:
+                if datetime.strptime(day, "%Y-%m-%d").date().isoformat() != day:
+                    raise ValueError("Data invalida.")
+            except ValueError as exc:
+                raise ValueError("Data em only_dates invalida.") from exc
     result = {"timezone": "America/Sao_Paulo",
               "enabled": raw["enabled"],
               "days": sorted(days),
               "times": sorted(times)}
     if only_date is not None:
         result["only_date"] = only_date
+    if only_dates is not None:
+        result["only_dates"] = sorted(only_dates)
     return result
 
 
@@ -88,6 +108,8 @@ def due_slot(raw_schedule, now):
     local_day = now.astimezone(TZ).date()
     if schedule.get("only_date") and local_day.isoformat() != schedule["only_date"]:
         return None
+    if schedule.get("only_dates") and local_day.isoformat() not in schedule["only_dates"]:
+        return None
     if not schedule["enabled"] or local_day.weekday() not in schedule["days"]:
         return None
     return next((t for t in schedule["times"] if slot_window_open(now, t)), None)
@@ -101,7 +123,8 @@ def upcoming(raw_schedule, now=None, days_ahead=14):
     for i in range(days_ahead):
         day = day0 + timedelta(days=i)
         if (schedule["enabled"] and day.weekday() in schedule["days"]
-                and (not schedule.get("only_date") or day.isoformat() == schedule["only_date"])):
+                and (not schedule.get("only_date") or day.isoformat() == schedule["only_date"])
+                and (not schedule.get("only_dates") or day.isoformat() in schedule["only_dates"])):
             rows.append({"date": day.strftime("%d/%m/%Y"),
                          "day_name": DAYS[day.weekday()],
                          "times": list(schedule["times"])})
