@@ -53,7 +53,7 @@ def validate_schedule(raw):
     # nunca ative automaticamente a agenda das semanas seguintes.
     only_date = raw.get("only_date")
     if only_date is not None:
-        if not isinstance(only_date, str) or not re.fullmatch(r"\\d{4}-\\d{2}-\\d{2}", only_date):
+        if not isinstance(only_date, str) or not re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}", only_date):
             raise ValueError("only_date deve estar no formato AAAA-MM-DD.")
         try:
             if datetime.strptime(only_date, "%Y-%m-%d").date().isoformat() != only_date:
