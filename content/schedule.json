@@ -2,10 +2,14 @@
   "timezone": "America/Sao_Paulo",
   "enabled": true,
   "days": [
-    0
+    0,
+    1
   ],
   "times": [
     "21:00"
   ],
-  "only_date": "2026-11-16"
+  "only_dates": [
+    "2026-11-16",
+    "2026-11-17"
+  ]
 }
