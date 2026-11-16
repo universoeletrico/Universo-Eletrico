@@ -51,8 +51,8 @@ class TestManualPublishButton(unittest.TestCase):
                                       data={"csrf": "csrf-valido", "confirmacao": "PUBLICAR-003"})
             self.assertEqual(result.status_code, 302)
             self.assertEqual(send.call_count, 1)
-            self.assertIn("/actions/workflows/publicar_003_painel.yml/dispatches", send.call_args.args[0])
-            self.assertEqual(send.call_args.kwargs["json"]["inputs"]["confirmacao"], "PUBLICAR-003")
+            self.assertIn("/dispatches", send.call_args.args[0])
+            self.assertEqual(send.call_args.kwargs["json"]["client_payload"]["confirmacao"], "PUBLICAR-003")
 
     def test_published_post_is_blocked(self):
         with patch.object(studio, "editable_post", side_effect=ValueError("Publicado")), \
