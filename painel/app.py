@@ -18,7 +18,7 @@ from pathlib import Path
 from threading import Lock
 
 import requests
-from flask import Flask, abort, flash, redirect, render_template, request, session, url_for
+from flask import Flask, Response, abort, flash, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash
 
 app = Flask(__name__)
@@ -112,16 +112,11 @@ def posts_with_status():
     posts = repo_json("content/posts.json")
     state = repo_json("content/state.json")
     rows = []
-    # A prévia do painel vem do repositório atualizado, não da publicação
-    # GitHub Pages, que pode atrasar ou servir a versão antiga em cache.
-    # A consulta usa uma chave nova por carregamento para evitar cache de browser.
-    preview_revision = str(time.time_ns())
+    # A prévia passa pelo servidor do Studio. CDNs de raw.githubusercontent.com
+    # e GitHub Pages podem exibir versões anteriores, mesmo após uma atualização.
     for p in posts:
         label, state_key = status_of(p, state)
-        image_url = (
-            f"https://raw.githubusercontent.com/{OWNER}/{REPO}/main/"
-            f"docs/posts/{p['id']}.jpg?v={preview_revision}"
-        )
+        image_url = url_for("preview_post_image", pid=p["id"])
         rows.append({**p, "status_label": label, "status_key": state_key, "image_url": image_url})
     return rows
 
@@ -287,6 +282,30 @@ def github_binary(path):
         if not encoded:
             raise RuntimeError("Não foi possível ler a imagem completa no GitHub.")
     return base64.b64decode(encoded), raw["sha"]
+
+
+@app.get("/preview/<pid>.jpg")
+@login_required
+def preview_post_image(pid):
+    """Exibe o JPEG atual via GitHub API, sem cache de navegador ou GitHub Pages.
+
+    Não altera imagens nem aciona publicação. Apenas administradores podem
+    visualizar esta rota, como nas demais telas do Studio.
+    """
+    if not (len(pid) == 3 and pid.isascii() and pid.isdecimal()):
+        abort(404)
+    try:
+        current = github_binary(f"docs/posts/{pid}.jpg")
+    except requests.RequestException:
+        app.logger.warning("Não foi possível carregar a prévia do post %s.", pid)
+        abort(502, "A prévia está temporariamente indisponível.")
+    if current is None:
+        abort(404)
+    image, sha = current
+    result = Response(image, mimetype="image/jpeg")
+    result.set_etag(sha)
+    result.headers["Cache-Control"] = "private, no-store, max-age=0"
+    return result
 
 
 def github_save_binary(path, payload, message, sha=None):
