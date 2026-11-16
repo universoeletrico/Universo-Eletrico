@@ -74,8 +74,8 @@
     "title": "Relé térmico",
     "hook": "Quem protege o motor?",
     "body": "O relé de sobrecarga ajuda a proteger motores contra correntes excessivas prolongadas.",
-    "caption": "⚡ Quem protege o motor?\n\nO relé de sobrecarga é associado à proteção de motores. Sua função é diferente da proteção contra curto-circuito.\n\n💡 Gostou? Salve este post para revisar depois e compartilhe com alguém que estuda elétrica!\n\n#UniversoEletrico #Eletrica #AutomacaoIndustrial #Eletricidade #ManutencaoIndustrial",
-    "approved": false,
+    "caption": "⚡ Quem protege o motor?\r\n\r\nO relé de sobrecarga é associado à proteção de motores. Sua função é diferente da proteção contra curto-circuito.\r\n\r\n💡 Gostou? Salve este post para revisar depois e compartilhe com alguém que estuda elétrica!\r\n\r\n#UniversoEletrico #Eletrica #AutomacaoIndustrial #Eletricidade #ManutencaoIndustrial",
+    "approved": true,
     "media_type": "IMAGE",
     "format": "feed"
   },
