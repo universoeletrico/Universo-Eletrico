@@ -67,6 +67,27 @@ class TestAgenda(unittest.TestCase):
         with self.assertRaises(ValueError):
             agenda.validate_schedule({**self.config, "only_date": "2026-02-30"})
 
+    def test_agenda_dois_dias_sem_repetir_nas_semanas_seguintes(self):
+        config = {**self.config, "only_dates": ["2026-11-16", "2026-11-17"],
+                  "days": [0, 1], "times": ["21:00"]}
+        tz = ZoneInfo("America/Sao_Paulo")
+        monday = datetime(2026, 11, 16, 21, 10, tzinfo=tz)
+        tuesday = datetime(2026, 11, 17, 21, 10, tzinfo=tz)
+        next_monday = datetime(2026, 11, 23, 21, 10, tzinfo=tz)
+        self.assertEqual(agenda.due_slot(config, monday), "21:00")
+        self.assertEqual(agenda.due_slot(config, tuesday), "21:00")
+        self.assertIsNone(agenda.due_slot(config, next_monday))
+        self.assertEqual(len(agenda.upcoming(config, monday, days_ahead=14)), 2)
+
+    def test_agenda_rejeita_lista_de_datas_invalidas(self):
+        for dates in (["2026-02-30"], [], ["2026-11-16", "2026-11-16"], [14]):
+            with self.subTest(dates=dates):
+                with self.assertRaises(ValueError):
+                    agenda.validate_schedule({**self.config, "only_dates": dates})
+        with self.assertRaises(ValueError):
+            agenda.validate_schedule({**self.config, "only_date": "2026-11-16",
+                                      "only_dates": ["2026-11-17"]})
+
     def test_uma_arte_por_slot(self):
         posts = [{"id": "003", "approved": True}]
         state = {"published": [{"id": "001", "local_date": "2026-11-13", "slot": "12:17"}]}
