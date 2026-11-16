@@ -25,5 +25,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Instalar dependencias dos testes
+        run: pip install -r requirements-publish.txt -r painel/requirements.txt
       - name: Rodar testes locais sem acessar Meta
         run: python -m unittest discover -s tests -v
