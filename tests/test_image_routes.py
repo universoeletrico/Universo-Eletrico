@@ -29,6 +29,25 @@ class ImageRoutesTest(unittest.TestCase):
             sess["admin"] = True
             sess["csrf"] = "token-teste"
 
+    def test_preview_is_protected(self):
+        result = self.client.get("/preview/004.jpg")
+        self.assertEqual(result.status_code, 302)
+        self.assertIn("/login", result.location)
+
+    def test_preview_reads_latest_github_content(self):
+        self.login()
+        with patch.object(studio, "github_binary", return_value=(b"latest-jpeg", "abcdef1234")) as fetch:
+            result = self.client.get("/preview/004.jpg")
+            self.assertEqual(result.status_code, 200)
+            self.assertEqual(result.data, b"latest-jpeg")
+            self.assertIn("no-store", result.headers.get("Cache-Control", ""))
+            fetch.assert_called_once_with("docs/posts/004.jpg")
+
+    def test_preview_rejects_invalid_id(self):
+        self.login()
+        result = self.client.get("/preview/0004.jpg")
+        self.assertEqual(result.status_code, 404)
+
     def test_unauthorized_upload_redirects_login(self):
         response = self.client.post("/post/003/imagem/enviar",
                                     data={"csrf": "token-teste"})
