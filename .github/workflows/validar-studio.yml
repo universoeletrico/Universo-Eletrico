@@ -1,0 +1,31 @@
+name: Validar Studio e robô (sem publicar)
+
+on:
+  push:
+    branches:
+      - feature/revisao-manual-imagens
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  testes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Baixar código
+        uses: actions/checkout@v4
+      - name: Preparar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Instalar dependências dos testes
+        run: |
+          python -m pip install -r requirements-publish.txt -r painel/requirements.txt
+      - name: Verificar sintaxe do painel
+        run: python -m compileall -q painel src tests
+      - name: Executar todos os testes
+        env:
+          GITHUB_EVENT_NAME: workflow_dispatch
+        run: python -m unittest discover -s tests -v

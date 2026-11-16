@@ -11,6 +11,32 @@
     <div class="preview-label"><span>PRÉ-VISUALIZAÇÃO DA ARTE</span><span>4:5 · Feed</span></div>
     <img src="{{ post.image_url }}" alt="Arte {{ post.title }}">
     <a class="plain-link" target="_blank" rel="noopener noreferrer" href="{{ post.image_url }}">Abrir imagem em tamanho completo ↗</a>
+    {% if writable and post.status_key not in ['published', 'scheduled'] %}
+    <section class="image-review">
+      <h2>Gerenciar imagem</h2>
+      <p class="body-note">O envio cria uma versão separada, ainda sem autorização para publicação. JPG, PNG ou WEBP, até 5 MB.</p>
+      <form method="post" action="{{ url_for('upload_post_image', pid=post.id) }}" enctype="multipart/form-data">
+        <input type="hidden" name="csrf" value="{{ csrf() }}">
+        <label for="image">Enviar imagem manualmente</label>
+        <input id="image" name="image" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" required>
+        <button type="submit" class="button outline">Enviar para revisão</button>
+      </form>
+      {% if candidate_url %}
+        <h3>Nova imagem aguardando sua aprovação</h3>
+        <img src="{{ candidate_url }}" alt="Nova imagem do post {{ post.id }} em revisão" loading="lazy">
+        <p class="body-note">A imagem acima ainda não substituiu a versão atual do post.</p>
+        <form method="post" action="{{ url_for('approve_post_image', pid=post.id) }}">
+          <input type="hidden" name="csrf" value="{{ csrf() }}">
+          <button class="button primary" type="submit">Aprovar e substituir imagem</button>
+        </form>
+        <form method="post" action="{{ url_for('discard_post_image', pid=post.id) }}">
+          <input type="hidden" name="csrf" value="{{ csrf() }}">
+          <button class="button outline" type="submit">Descartar versão rejeitada</button>
+        </form>
+      {% endif %}
+      <p class="safety-note">O arquivo anterior é preservado antes da substituição. Depois, aprove a legenda para liberar o post.</p>
+    </section>
+    {% endif %}
   </div>
   <div class="editor-card">
     <div class="preview-label"><span>TEXTO DA PUBLICAÇÃO</span><span>Instagram</span></div>

@@ -3,3 +3,4 @@ requests>=2.31,<3
 gunicorn>=22,<24
 psycopg[binary]>=3.2,<4
 cryptography>=43,<47
+Pillow>=10.4,<13

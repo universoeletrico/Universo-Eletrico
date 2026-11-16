@@ -28,7 +28,7 @@ app.config.update(
     SESSION_COOKIE_SECURE=True,
     SESSION_COOKIE_SAMESITE="Lax",
     PERMANENT_SESSION_LIFETIME=60 * 60 * 8,
-    MAX_CONTENT_LENGTH=1024 * 30,
+    MAX_CONTENT_LENGTH=6 * 1024 * 1024,
 )
 
 OWNER = "universoeletrico"
@@ -47,6 +47,7 @@ from painel.affiliates import (
 )
 from painel.research import catalogue_category, editorial_ideas, search_official_catalog, search_url
 from painel import meli_oauth
+from painel.image_management import normalize_post_image
 MEDIA = "https://universoeletrico.github.io/Universo-Eletrico/posts/"
 LOGO = "https://raw.githubusercontent.com/universoeletrico/Universo-Eletrico/main/assets/logo-original.png"
 _cache = {}
@@ -246,6 +247,142 @@ def dashboard():
     return render_template("dashboard.html", posts=results, total=len(all_posts), totals=totals, coverage=coverage, q=query, selected=selected, tab="artes")
 
 
+def editable_post(pid):
+    if not (pid.isdigit() and len(pid) == 3):
+        abort(404)
+    state, _ = github_file("content/state.json")
+    if pid in {row.get("id") for group in ("published", "externally_scheduled")
+               for row in state.get(group, [])} or (state.get("pending") or {}).get("id") == pid:
+        raise ValueError("Post publicado, agendado ou reservado: imagem bloqueada.")
+    posts, _ = github_file("content/posts.json")
+    item = next((p for p in posts if p.get("id") == pid), None)
+    if item is None:
+        abort(404)
+    return item
+
+
+def github_binary(path):
+    response = requests.get(API + path, headers=github_headers(write=True), timeout=20)
+    if response.status_code == 404:
+        return None
+    response.raise_for_status()
+    raw = response.json()
+    encoded = raw.get("content")
+    if not encoded:
+        # A API Contents omite o conteudo base64 de arquivos acima de 1 MB.
+        # Usa a Git Blobs API autenticada para esses casos.
+        blob = requests.get(
+            f"https://api.github.com/repos/{OWNER}/{REPO}/git/blobs/{raw['sha']}",
+            headers=github_headers(write=True), timeout=30)
+        blob.raise_for_status()
+        encoded = blob.json().get("content")
+        if not encoded:
+            raise RuntimeError("Não foi possível ler a imagem completa no GitHub.")
+    return base64.b64decode(encoded), raw["sha"]
+
+
+def github_save_binary(path, payload, message, sha=None):
+    data = {"message": message, "branch": "main",
+            "content": base64.b64encode(payload).decode("ascii")}
+    if sha:
+        data["sha"] = sha
+    result = requests.put(API + path, headers=github_headers(write=True), json=data, timeout=30)
+    if result.status_code in (409, 422):
+        raise ValueError("Imagem alterada simultaneamente. Atualize a página.")
+    result.raise_for_status()
+
+
+def github_delete_binary(path, sha):
+    result = requests.delete(API + path, headers=github_headers(write=True),
+                             json={"message": "studio: descartar imagem em revisao",
+                                   "sha": sha, "branch": "main"}, timeout=30)
+    if result.status_code in (409, 422):
+        raise ValueError("Imagem alterada simultaneamente. Atualize a página.")
+    result.raise_for_status()
+
+
+def staged_image(pid):
+    # Consulta sem gravar: arquivos candidatos nao participam da fila do robô.
+    result = github_binary(f"docs/review/{pid}.jpg") if os.environ.get("GITHUB_WRITE_TOKEN") else None
+    return result
+
+
+@app.post("/post/<pid>/imagem/enviar")
+@login_required
+def upload_post_image(pid):
+    validate_csrf()
+    try:
+        post = editable_post(pid)
+        data = request.files.get("image")
+        if data is None:
+            raise ValueError("Escolha uma imagem JPG, PNG ou WEBP.")
+        payload = normalize_post_image(data.read(5 * 1024 * 1024 + 1))
+        # Antes do upload, impede que a imagem antiga seja publicada enquanto
+        # o administrador avalia a nova versão.
+        if post.get("approved"):
+            save_to_github(pid, post.get("caption", ""), False)
+        current = staged_image(pid)
+        github_save_binary(f"docs/review/{pid}.jpg", payload,
+                           f"studio: enviar imagem para revisao do post {pid}",
+                           current[1] if current else None)
+        flash("Nova imagem recebida para revisão. Ainda não será publicada.", "success")
+    except (ValueError, RuntimeError, requests.RequestException) as exc:
+        app.logger.warning("Falha no envio da imagem: %s", type(exc).__name__)
+        flash(str(exc) if isinstance(exc, (ValueError, RuntimeError))
+              else "Não foi possível enviar a imagem ao GitHub.", "error")
+    return redirect(url_for("detail", pid=pid))
+
+
+@app.post("/post/<pid>/imagem/descartar")
+@login_required
+def discard_post_image(pid):
+    validate_csrf()
+    try:
+        editable_post(pid)
+        candidate = staged_image(pid)
+        if candidate is None:
+            raise ValueError("Nenhuma imagem aguardando revisão.")
+        github_delete_binary(f"docs/review/{pid}.jpg", candidate[1])
+        flash("Versão rejeitada descartada. A imagem antiga permanece preservada.", "success")
+    except (ValueError, RuntimeError, requests.RequestException) as exc:
+        app.logger.warning("Falha no descarte: %s", type(exc).__name__)
+        flash(str(exc) if isinstance(exc, (ValueError, RuntimeError))
+              else "Não foi possível descartar a imagem.", "error")
+    return redirect(url_for("detail", pid=pid))
+
+
+@app.post("/post/<pid>/imagem/aprovar")
+@login_required
+def approve_post_image(pid):
+    validate_csrf()
+    try:
+        post = editable_post(pid)
+        candidate = staged_image(pid)
+        if candidate is None:
+            raise ValueError("Nenhuma imagem aguardando aprovação.")
+        current = github_binary(f"docs/posts/{pid}.jpg")
+        if current is None:
+            raise ValueError("A imagem antiga está ausente. A operação foi interrompida.")
+        # Backup imutável por SHA antes de substituir o arquivo servido pelo Instagram.
+        backup_path = f"docs/backups/{pid}-{current[1][:12]}.jpg"
+        if github_binary(backup_path) is None:
+            github_save_binary(backup_path, current[0], f"studio: backup do post {pid}")
+        # O post fica em rascunho durante a troca para impedir publicação parcial.
+        if post.get("approved"):
+            save_to_github(pid, post.get("caption", ""), False)
+        # Revalidar reserva depois de realizar o backup.
+        editable_post(pid)
+        github_save_binary(f"docs/posts/{pid}.jpg", candidate[0],
+                           f"studio: aprovar nova imagem do post {pid}", current[1])
+        github_delete_binary(f"docs/review/{pid}.jpg", candidate[1])
+        flash("Imagem substituída com backup. Post em rascunho: aprove a legenda para entrar na fila.", "success")
+    except (ValueError, RuntimeError, requests.RequestException) as exc:
+        app.logger.warning("Falha ao aprovar imagem: %s", type(exc).__name__)
+        flash(str(exc) if isinstance(exc, (ValueError, RuntimeError))
+              else "Não foi possível substituir a imagem.", "error")
+    return redirect(url_for("detail", pid=pid))
+
+
 @app.route("/post/<pid>")
 @login_required
 def detail(pid):
@@ -254,7 +391,15 @@ def detail(pid):
     post = next((x for x in posts_with_status() if x["id"] == pid), None)
     if not post:
         abort(404)
-    return render_template("detail.html", post=post, tab="artes")
+    candidate = None
+    try:
+        candidate = staged_image(pid)
+    except requests.RequestException:
+        app.logger.warning("Prévia da imagem em revisão indisponível.")
+    candidate_url = (f"https://raw.githubusercontent.com/{OWNER}/{REPO}/main/"
+                     f"docs/review/{pid}.jpg?rev={candidate[1]}" if candidate else None)
+    return render_template("detail.html", post=post, tab="artes",
+                           candidate_url=candidate_url)
 
 
 def github_file(path):
@@ -287,6 +432,9 @@ def save_bulk_approval(ids):
         if (not post or pid in blocked or post.get("approved") is not False
                 or not post.get("caption") or not post.get("title")):
             raise ValueError("Uma das artes foi alterada, aprovada ou reservada. Atualize a pagina.")
+    for pid in ids:
+        if staged_image(pid) is not None:
+            raise ValueError(f"Post {pid} tem uma imagem aguardando revisão. Aprove ou descarte a imagem antes.")
     for pid in ids:
         by_id[pid]["approved"] = True
 
@@ -347,6 +495,8 @@ def save_to_github(pid, caption, approved):
         raise ValueError("Post agendado externamente: nao alterar pelo painel.")
     if state.get("pending", {}).get("id") == pid:
         raise ValueError("Post reservado pelo robo: nao editar.")
+    if approved and staged_image(pid) is not None:
+        raise ValueError("Existe uma nova imagem em revisão. Aprove ou descarte essa versão primeiro.")
     found["caption"] = caption
     found["approved"] = approved
     payload = {
