@@ -546,6 +546,48 @@ def save_to_github(pid, caption, approved):
     invalidate("content/posts.json")
 
 
+@app.post("/post/<pid>/publicar-agora")
+@login_required
+def publish_post_now(pid):
+    """Enfileira publicacao manual do 003 apos confirmacao humana; nao chama a Meta."""
+    validate_csrf()
+    if pid != "003":
+        abort(404)
+    if request.form.get("confirmacao", "").strip() != "PUBLICAR-003":
+        flash("Para confirmar, digite PUBLICAR-003. Nenhuma publicação solicitada.", "error")
+        return redirect(url_for("detail", pid=pid))
+    try:
+        post = editable_post(pid)
+        if post.get("approved") is not True or not post.get("caption"):
+            raise ValueError("O Post 003 precisa estar aprovado e ter legenda.")
+        if staged_image(pid) is not None:
+            raise ValueError("Existe uma nova imagem aguardando aprovação.")
+        # Dados ao vivo, sem cache, para impedir duplicacao mesmo após recarregar.
+        state, _ = github_file("content/state.json")
+        if state.get("pending"):
+            raise ValueError("Já existe uma publicação reservada. Confira o histórico primeiro.")
+        if any(p.get("id") == pid for p in state.get("published", [])):
+            raise ValueError("O Post 003 já consta como publicado.")
+        url = f"https://api.github.com/repos/{OWNER}/{REPO}/actions/workflows/publicar_003_painel.yml/dispatches"
+        response = requests.post(
+            url, headers=github_headers(write=True), timeout=20,
+            json={"ref": "main", "inputs": {"confirmacao": "PUBLICAR-003"}},
+        )
+        if response.status_code in (401, 403):
+            raise ValueError("O token do painel precisa da permissão Actions: Read and write no GitHub para publicar.")
+        if response.status_code == 404:
+            raise ValueError("Workflow manual indisponível no GitHub. Confira a implantação do recurso.")
+        response.raise_for_status()
+        if response.status_code != 204:
+            raise RuntimeError("GitHub não confirmou o acionamento da publicação.")
+        flash("Pedido de publicação do Post 003 enviado ao GitHub Actions. Ainda não é confirmação de publicação na Meta. Acompanhe o resultado em Actions.", "success")
+    except (ValueError, RuntimeError, requests.RequestException) as exc:
+        app.logger.warning("Falha ao solicitar publicação manual: %s", type(exc).__name__)
+        flash(str(exc) if isinstance(exc, (ValueError, RuntimeError))
+              else "Não foi possível iniciar a publicação no GitHub Actions.", "error")
+    return redirect(url_for("detail", pid=pid))
+
+
 @app.post("/post/<pid>/save")
 @login_required
 def save_post(pid):
