@@ -74,15 +74,22 @@ def repo_json(path):
         cached = _cache.get(path)
         if cached and time.monotonic() - cached[0] < 25:
             return cached[1]
-    # Os dados do universo eletrico sao publicos e ja existem no repo.
+    # Para evitar status antigos, ler o JSON pela API Contents do GitHub,
+    # em vez do CDN raw.githubusercontent.com (cache eventual).
+    # A API fornece o conteúdo do arquivo e sua versão atual no branch main.
     try:
         response = requests.get(
-            f"https://raw.githubusercontent.com/{OWNER}/{REPO}/main/{path}",
-            timeout=10
+            API + path, headers=github_headers(), params={"ref": "main"}, timeout=12
         )
         response.raise_for_status()
-        data = response.json()
-    except (requests.RequestException, ValueError):
+        encoded = response.json().get("content")
+        if not encoded:
+            raise ValueError("O GitHub não retornou o conteúdo do arquivo.")
+        data = json.loads(base64.b64decode(encoded).decode("utf-8"))
+    except (requests.RequestException, ValueError, KeyError) as exc:
+        app.logger.warning("Leitura ao vivo do GitHub falhou para %s: %s", path, type(exc).__name__)
+        # Fallback somente para indisponibilidade transitória, sem afirmar
+        # que o dado local reflete o estado mais recente.
         data = json.loads((ROOT / path).read_text(encoding="utf-8"))
     with _lock:
         _cache[path] = (time.monotonic(), data)
