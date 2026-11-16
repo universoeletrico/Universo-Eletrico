@@ -6,18 +6,14 @@
       "media_id": "18102825599382342",
       "local_date": "2026-11-11",
       "published_at": "2026-11-12T02:48:47.108277+00:00"
-    }
-  ],
-  "externally_scheduled": [
+    },
     {
       "id": "001",
-      "date": "2026-11-12",
-      "platforms": [
-        "Instagram",
-        "Facebook"
-      ],
+      "local_date": "2026-11-12",
       "source": "Meta Business Suite",
-      "note": "Agendado pelo usuário para 19h. Não duplicar via robô."
+      "verification": "confirmado_pelo_usuario",
+      "note": "Usuário confirmou no Instagram que a publicação agendada foi realizada; ID e horário exato ainda não conferidos."
     }
-  ]
+  ],
+  "externally_scheduled": []
 }
