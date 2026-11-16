@@ -1,6 +1,6 @@
 {
   "timezone": "America/Sao_Paulo",
-  "enabled": true,
+  "enabled": false,
   "days": [
     0,
     1,
