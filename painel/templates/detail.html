@@ -59,6 +59,20 @@
         </div>
       {% endif %}
     </form>
+    {% if writable and post.id == '003' and post.status_key == 'approved' %}
+    <section class="image-review">
+      <h2>Publicar Post 003 agora</h2>
+      <p class="body-note">Teste real de publicação no Instagram. Não ativa a agenda automática. Confira a imagem e a legenda acima antes de confirmar.</p>
+      <form method="post" action="{{ url_for('publish_post_now', pid=post.id) }}">
+        <input type="hidden" name="csrf" value="{{ csrf() }}">
+        <label for="confirmacao-publicacao-003">Para publicar de verdade, digite <strong>PUBLICAR-003</strong></label>
+        <input id="confirmacao-publicacao-003" type="text" name="confirmacao" autocomplete="off" required placeholder="PUBLICAR-003">
+        <button class="button primary" type="submit">Publicar agora no Instagram</button>
+      </form>
+      <p class="safety-note">O botão solicita a execução no GitHub Actions. Depois de confirmar, acompanhe o histórico e o Instagram. Se houver erro ou resultado desconhecido, não repita o envio sem conferir a conta.</p>
+      <a class="plain-link" target="_blank" rel="noopener noreferrer" href="https://github.com/universoeletrico/Universo-Eletrico/actions/workflows/publicar_003_painel.yml">Acompanhar publicação no GitHub Actions ↗</a>
+    </section>
+    {% endif %}
     <div class="safety-note">Aprovar um conteúdo não ativa o robô diário. O envio ao Instagram tem controles próprios.</div>
   </div>
 </div>
