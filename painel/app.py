@@ -422,6 +422,9 @@ def save_bulk_approval(ids):
                 or not post.get("caption") or not post.get("title")):
             raise ValueError("Uma das artes foi alterada, aprovada ou reservada. Atualize a pagina.")
     for pid in ids:
+        if staged_image(pid) is not None:
+            raise ValueError(f"Post {pid} tem uma imagem aguardando revisão. Aprove ou descarte a imagem antes.")
+    for pid in ids:
         by_id[pid]["approved"] = True
 
     content = json.dumps(posts, indent=2, ensure_ascii=False) + "\n"
@@ -481,6 +484,8 @@ def save_to_github(pid, caption, approved):
         raise ValueError("Post agendado externamente: nao alterar pelo painel.")
     if state.get("pending", {}).get("id") == pid:
         raise ValueError("Post reservado pelo robo: nao editar.")
+    if approved and staged_image(pid) is not None:
+        raise ValueError("Existe uma nova imagem em revisão. Aprove ou descarte essa versão primeiro.")
     found["caption"] = caption
     found["approved"] = approved
     payload = {
