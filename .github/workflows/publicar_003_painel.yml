@@ -1,0 +1,108 @@
+name: Publicar post 003 pelo Studio (confirmacao manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmacao:
+        description: Confirmacao explicita da publicacao do post 003
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: instagram-universo-eletrico
+  cancel-in-progress: false
+
+jobs:
+  publicar-003:
+    if: ${{ inputs.confirmacao == 'PUBLICAR-003' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      PUBLISH_ENABLED: 'true'
+      MANUAL_POST_ID: '003'
+      PUBLIC_MEDIA_BASE_URL: ${{ vars.PUBLIC_MEDIA_BASE_URL }}
+      INSTAGRAM_USER_ID: ${{ secrets.INSTAGRAM_USER_ID }}
+      INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
+      GRAPH_API_VERSION: v27.0
+    steps:
+      - name: Baixar codigo mais recente
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: true
+
+      - name: Preparar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Instalar dependencias
+        run: pip install -r requirements-publish.txt
+
+      - name: Validar publicador sem enviar nada
+        run: python -m unittest discover -s tests -v
+
+      - name: Verificar se imagem publica e exatamente a aprovada
+        run: |
+          python - <<'PY'
+          import os
+          import time
+          from pathlib import Path
+          from urllib.parse import urljoin, urlsplit
+          import requests
+          base = os.environ.get('PUBLIC_MEDIA_BASE_URL', '').strip().rstrip('/') + '/'
+          parsed = urlsplit(base)
+          if parsed.scheme != 'https' or not parsed.hostname:
+              raise SystemExit('URL publica ausente ou insegura.')
+          url = urljoin(base, 'posts/003.jpg')
+          expected = Path('docs/posts/003.jpg').read_bytes()
+          for attempt in range(12):
+              try:
+                  response = requests.get(url, timeout=15)
+                  response.raise_for_status()
+                  if response.content == expected:
+                      print('Imagem publica 003 corresponde ao JPEG aprovado.')
+                      break
+              except requests.RequestException:
+                  pass
+              if attempt == 11:
+                  raise SystemExit('Imagem publica ainda nao corresponde ao arquivo aprovado. Nenhum post publicado.')
+              time.sleep(10)
+          PY
+
+      - name: Reservar post 003 sem acionar Meta
+        run: python -m src.publish_manual_003
+
+      - name: Persistir reserva no GitHub antes de comunicar com a Meta
+        run: |
+          if git diff --quiet -- content/state.json; then
+            echo 'Nenhuma reserva foi criada, publicacao bloqueada.'
+            exit 1
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add content/state.json
+          git commit -m 'Reservar post 003 via Studio'
+          git push
+
+      - name: Publicar somente post 003 reservado
+        run: |
+          python - <<'PY'
+          import json
+          state=json.load(open('content/state.json',encoding='utf-8'))
+          assert state.get('pending',{}).get('id') == '003', 'Reserva divergente.'
+          PY
+          python src/publish_daily.py --publish
+
+      - name: Registrar confirmacao da Meta no historico
+        run: |
+          if git diff --quiet -- content/state.json; then
+            echo 'Sem confirmacao no historico. Verificar na Meta ANTES de qualquer nova tentativa.'
+            exit 1
+          fi
+          git add content/state.json
+          git commit -m 'Registrar publicacao manual 003 confirmada'
+          git push
