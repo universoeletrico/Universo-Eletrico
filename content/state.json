@@ -13,13 +13,13 @@
       "source": "Meta Business Suite",
       "verification": "confirmado_pelo_usuario",
       "note": "Usuário confirmou no Instagram que a publicação agendada foi realizada; ID e horário exato ainda não conferidos."
+    },
+    {
+      "id": "003",
+      "media_id": "18072764804786151",
+      "local_date": "2026-11-15",
+      "published_at": "2026-11-16T02:02:33.321090+00:00"
     }
   ],
-  "externally_scheduled": [],
-  "pending": {
-    "id": "003",
-    "local_date": "2026-11-15",
-    "reserved_at": "2026-11-15T23:02:21.828998-03:00",
-    "source": "studio_manual"
-  }
+  "externally_scheduled": []
 }
