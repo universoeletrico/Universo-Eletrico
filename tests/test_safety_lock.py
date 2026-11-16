@@ -38,10 +38,19 @@ class TestSafetyLock(unittest.TestCase):
 
     def test_reserve_requires_explicit_enable(self):
         now = datetime(2026, 11, 13, 19, 17, tzinfo=ZoneInfo('America/Sao_Paulo'))
+        agenda = {'timezone': 'America/Sao_Paulo', 'enabled': True,
+                  'days': [4], 'times': ['19:17']}
+        # A reserva so chega ao bloqueio PUBLISH_ENABLED quando uma
+        # execucao agendada coincide com o horario (teste anterior pulava
+        # este caminho e gerava falso negativo).
         with patch.object(pub, 'load_json', side_effect=[
             [{'id': '002', 'approved': True}],
             {'not_before_date': '2026-11-13', 'published': []}
-        ]), patch.dict(pub.os.environ, {'PUBLISH_ENABLED': 'false'}):
+        ]), patch.object(pub, 'read_schedule', return_value=agenda), \
+             patch.dict(pub.os.environ, {
+                 'PUBLISH_ENABLED': 'false',
+                 'GITHUB_EVENT_NAME': 'schedule'
+             }):
             with self.assertRaisesRegex(RuntimeError, 'PUBLISH_ENABLED'):
                 pub.run(reserve=True, now=now)
 
