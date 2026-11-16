@@ -28,7 +28,7 @@ app.config.update(
     SESSION_COOKIE_SECURE=True,
     SESSION_COOKIE_SAMESITE="Lax",
     PERMANENT_SESSION_LIFETIME=60 * 60 * 8,
-    MAX_CONTENT_LENGTH=1024 * 30,
+    MAX_CONTENT_LENGTH=6 * 1024 * 1024,
 )
 
 OWNER = "universoeletrico"
