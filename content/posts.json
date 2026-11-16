@@ -44,8 +44,8 @@
     "title": "Inversor de frequência",
     "hook": "Como controlar a velocidade?",
     "body": "O inversor ajusta frequência e tensão para controlar motores adequados.",
-    "caption": "⚡ Como controlar a velocidade?\n\nInversores de frequência possibilitam variar a velocidade de muitos motores CA. Sua aplicação depende do tipo de motor e do projeto.\n\n💡 Gostou? Salve este post para revisar depois e compartilhe com alguém que estuda elétrica!\n\n#UniversoEletrico #Eletrica #AutomacaoIndustrial #Eletricidade #ManutencaoIndustrial",
-    "approved": false,
+    "caption": "⚡ Como controlar a velocidade?\r\n\r\nInversores de frequência possibilitam variar a velocidade de muitos motores CA. Sua aplicação depende do tipo de motor e do projeto.\r\n\r\n💡 Gostou? Salve este post para revisar depois e compartilhe com alguém que estuda elétrica!\r\n\r\n#UniversoEletrico #Eletrica #AutomacaoIndustrial #Eletricidade #ManutencaoIndustrial",
+    "approved": true,
     "media_type": "IMAGE",
     "format": "feed"
   },
