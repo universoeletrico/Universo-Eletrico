@@ -78,10 +78,29 @@ def validate_schedule(raw):
                     raise ValueError("Data invalida.")
             except ValueError as exc:
                 raise ValueError("Data em only_dates invalida.") from exc
+    # Horario excepcional de uma data, sem alterar a rotina diaria.
+    # O painel pode continuar usando times para a agenda principal.
+    date_overrides = raw.get("date_overrides", {})
+    if not isinstance(date_overrides, dict) or len(date_overrides) > 31:
+        raise ValueError("date_overrides invalido.")
+    for day, special_times in date_overrides.items():
+        if not isinstance(day, str) or not re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}", day):
+            raise ValueError("Data excepcional invalida.")
+        try:
+            if datetime.strptime(day, "%Y-%m-%d").date().isoformat() != day:
+                raise ValueError("Data excepcional invalida.")
+        except ValueError as exc:
+            raise ValueError("Data excepcional invalida.") from exc
+        if (not isinstance(special_times, list) or len(special_times) != 1 or
+                not isinstance(special_times[0], str) or
+                not re.fullmatch(r"(?:[01][0-9]|2[0-3]):[0-5][0-9]", special_times[0])):
+            raise ValueError("Horario excepcional invalido: apenas uma publicacao por dia.")
     result = {"timezone": "America/Sao_Paulo",
               "enabled": raw["enabled"],
               "days": sorted(days),
               "times": sorted(times)}
+    if date_overrides:
+        result["date_overrides"] = dict(sorted(date_overrides.items()))
     if only_date is not None:
         result["only_date"] = only_date
     if only_dates is not None:
@@ -112,7 +131,8 @@ def due_slot(raw_schedule, now):
         return None
     if not schedule["enabled"] or local_day.weekday() not in schedule["days"]:
         return None
-    return next((t for t in schedule["times"] if slot_window_open(now, t)), None)
+    times = schedule.get("date_overrides", {}).get(local_day.isoformat(), schedule["times"])
+    return next((t for t in times if slot_window_open(now, t)), None)
 
 
 def upcoming(raw_schedule, now=None, days_ahead=14):
@@ -127,5 +147,6 @@ def upcoming(raw_schedule, now=None, days_ahead=14):
                 and (not schedule.get("only_dates") or day.isoformat() in schedule["only_dates"])):
             rows.append({"date": day.strftime("%d/%m/%Y"),
                          "day_name": DAYS[day.weekday()],
-                         "times": list(schedule["times"])})
+                         "times": list(schedule.get("date_overrides", {}).get(
+                             day.isoformat(), schedule["times"]))})
     return rows

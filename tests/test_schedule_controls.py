@@ -88,6 +88,26 @@ class TestAgenda(unittest.TestCase):
             agenda.validate_schedule({**self.config, "only_date": "2026-11-16",
                                       "only_dates": ["2026-11-17"]})
 
+    def test_rotina_diaria_1917_com_excecao_hoje_2100(self):
+        config = {"timezone": "America/Sao_Paulo", "enabled": True,
+                  "days": list(range(7)), "times": ["19:17"],
+                  "date_overrides": {"2026-11-16": ["21:00"]}}
+        tz = ZoneInfo("America/Sao_Paulo")
+        hoje = datetime(2026, 11, 16, 21, 12, tzinfo=tz)
+        amanha = datetime(2026, 11, 17, 19, 22, tzinfo=tz)
+        self.assertEqual(agenda.due_slot(config, hoje), "21:00")
+        self.assertIsNone(agenda.due_slot(config, hoje.replace(hour=19, minute=20)))
+        self.assertEqual(agenda.due_slot(config, amanha), "19:17")
+        self.assertEqual(agenda.due_slot(config, amanha.replace(day=18)), "19:17")
+        rows = agenda.upcoming(config, hoje, days_ahead=3)
+        self.assertEqual([r["times"] for r in rows],
+                         [["21:00"], ["19:17"], ["19:17"]])
+
+    def test_rejeita_multiplas_postagens_em_excecao(self):
+        with self.assertRaises(ValueError):
+            agenda.validate_schedule({**self.config, "date_overrides":
+                                      {"2026-11-16": ["19:17", "21:00"]}})
+
     def test_uma_arte_por_slot(self):
         posts = [{"id": "003", "approved": True}]
         state = {"published": [{"id": "001", "local_date": "2026-11-13", "slot": "12:17"}]}
