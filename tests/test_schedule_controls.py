@@ -54,6 +54,19 @@ class TestAgenda(unittest.TestCase):
         late = self.now.replace(hour=13, minute=2)
         self.assertIsNone(agenda.due_slot(self.config, late))
 
+    def test_agenda_apenas_no_dia_autorizado(self):
+        config = {**self.config, "only_date": "2026-11-16", "days": [0],
+                  "times": ["19:17"]}
+        horario = datetime(2026, 11, 16, 19, 25,
+                           tzinfo=ZoneInfo("America/Sao_Paulo"))
+        self.assertEqual(agenda.due_slot(config, horario), "19:17")
+        self.assertIsNone(agenda.due_slot(config, horario.replace(day=23)))
+        self.assertEqual(len(agenda.upcoming(config, horario, days_ahead=14)), 1)
+
+    def test_rejeita_data_invalida(self):
+        with self.assertRaises(ValueError):
+            agenda.validate_schedule({**self.config, "only_date": "2026-02-30"})
+
     def test_uma_arte_por_slot(self):
         posts = [{"id": "003", "approved": True}]
         state = {"published": [{"id": "001", "local_date": "2026-11-13", "slot": "12:17"}]}
