@@ -267,7 +267,18 @@ def github_binary(path):
         return None
     response.raise_for_status()
     raw = response.json()
-    return base64.b64decode(raw["content"]), raw["sha"]
+    encoded = raw.get("content")
+    if not encoded:
+        # A API Contents omite o conteudo base64 de arquivos acima de 1 MB.
+        # Usa a Git Blobs API autenticada para esses casos.
+        blob = requests.get(
+            f"https://api.github.com/repos/{OWNER}/{REPO}/git/blobs/{raw['sha']}",
+            headers=github_headers(write=True), timeout=30)
+        blob.raise_for_status()
+        encoded = blob.json().get("content")
+        if not encoded:
+            raise RuntimeError("Não foi possível ler a imagem completa no GitHub.")
+    return base64.b64decode(encoded), raw["sha"]
 
 
 def github_save_binary(path, payload, message, sha=None):
