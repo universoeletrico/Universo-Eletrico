@@ -31,9 +31,13 @@ class TestManualEarly(unittest.TestCase):
             self.assertIsNone(pub.run(publish=False, now=self.now))
 
     def test_manual_reserves_only_post_002_on_11(self):
+        # GitHub Actions define GITHUB_EVENT_NAME=schedule; este teste exercita
+        # explicitamente o antigo fluxo manual, sem janela de cron.
         with patch.object(pub, 'load_json', side_effect=[self.posts, self.state]), \
              patch.object(pub, 'save_state') as saved, \
-             patch.dict(pub.os.environ, {'PUBLISH_ENABLED': 'true', 'MANUAL_TEST_POST_ID': '002'}):
+             patch.dict(pub.os.environ, {'PUBLISH_ENABLED': 'true',
+                                         'MANUAL_TEST_POST_ID': '002',
+                                         'GITHUB_EVENT_NAME': 'workflow_dispatch'}):
             p = pub.reserve_for_day(self.now)
         self.assertEqual(p['id'], '002')
         self.assertEqual(self.state['pending']['id'], '002')
