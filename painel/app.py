@@ -112,9 +112,17 @@ def posts_with_status():
     posts = repo_json("content/posts.json")
     state = repo_json("content/state.json")
     rows = []
+    # A prévia do painel vem do repositório atualizado, não da publicação
+    # GitHub Pages, que pode atrasar ou servir a versão antiga em cache.
+    # A consulta usa uma chave nova por carregamento para evitar cache de browser.
+    preview_revision = str(time.time_ns())
     for p in posts:
         label, state_key = status_of(p, state)
-        rows.append({**p, "status_label": label, "status_key": state_key, "image_url": f"{MEDIA}{p['id']}.jpg"})
+        image_url = (
+            f"https://raw.githubusercontent.com/{OWNER}/{REPO}/main/"
+            f"docs/posts/{p['id']}.jpg?v={preview_revision}"
+        )
+        rows.append({**p, "status_label": label, "status_key": state_key, "image_url": image_url})
     return rows
 
 
