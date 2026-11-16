@@ -1,12 +1,8 @@
 name: Publicar post 003 pelo Studio (confirmacao manual)
 
 on:
-  workflow_dispatch:
-    inputs:
-      confirmacao:
-        description: Confirmacao explicita da publicacao do post 003
-        required: true
-        type: string
+  repository_dispatch:
+    types: [publicar_studio_003]
 
 permissions:
   contents: write
@@ -17,7 +13,7 @@ concurrency:
 
 jobs:
   publicar-003:
-    if: ${{ inputs.confirmacao == 'PUBLICAR-003' }}
+    if: ${{ github.event.client_payload.confirmacao == 'PUBLICAR-003' }}
     runs-on: ubuntu-latest
     timeout-minutes: 12
     env:
