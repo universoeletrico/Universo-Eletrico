@@ -1,0 +1,29 @@
+name: Validar publicacao manual 003 sem publicar
+
+on:
+  push:
+    branches:
+      - feat/publicacao-manual-003-studio
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Instalar dependencias
+        run: pip install -r requirements-publish.txt -r painel/requirements.txt
+      - name: Validar sintaxe
+        run: python -m compileall -q src painel tests
+      - name: Testar reserva manual e publicador offline
+        env:
+          GITHUB_EVENT_NAME: workflow_dispatch
+        run: python -m unittest discover -s tests -v
+      - name: Testar painel e CSRF offline
+        run: python -m unittest discover -s painel/tests -v
