@@ -568,18 +568,18 @@ def publish_post_now(pid):
             raise ValueError("Já existe uma publicação reservada. Confira o histórico primeiro.")
         if any(p.get("id") == pid for p in state.get("published", [])):
             raise ValueError("O Post 003 já consta como publicado.")
-        url = f"https://api.github.com/repos/{OWNER}/{REPO}/actions/workflows/publicar_003_painel.yml/dispatches"
+        url = f"https://api.github.com/repos/{OWNER}/{REPO}/dispatches"
         response = requests.post(
             url, headers=github_headers(write=True), timeout=20,
-            json={"ref": "main", "inputs": {"confirmacao": "PUBLICAR-003"}},
+            json={"event_type": "publicar_studio_003", "client_payload": {"confirmacao": "PUBLICAR-003"}},
         )
         if response.status_code in (401, 403):
-            raise ValueError("O token do painel precisa da permissão Actions: Read and write no GitHub para publicar.")
+            raise ValueError("O token do painel não tem permissão para solicitar a publicação (Contents: Read and write no GitHub).")
         if response.status_code == 404:
-            raise ValueError("Workflow manual indisponível no GitHub. Confira a implantação do recurso.")
+            raise ValueError("O GitHub não encontrou o repositório para solicitar a publicação.")
         response.raise_for_status()
         if response.status_code != 204:
-            raise RuntimeError("GitHub não confirmou o acionamento da publicação.")
+            raise RuntimeError("GitHub não confirmou a solicitação de publicação.")
         flash("Pedido de publicação do Post 003 enviado ao GitHub Actions. Ainda não é confirmação de publicação na Meta. Acompanhe o resultado em Actions.", "success")
     except (ValueError, RuntimeError, requests.RequestException) as exc:
         app.logger.warning("Falha ao solicitar publicação manual: %s", type(exc).__name__)
