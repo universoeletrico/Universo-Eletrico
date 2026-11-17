@@ -64,8 +64,8 @@
     "title": "Encoder",
     "hook": "Como a máquina sabe a posição?",
     "body": "Encoders fornecem sinais relacionados ao movimento, à posição ou à velocidade.",
-    "caption": "⚡ Como a máquina sabe a posição?\n\nEncoders ajudam no acompanhamento de eixos e transportadores. Conforme o tipo, fornecem posição incremental ou absoluta.\n\n💡 Gostou? Salve este post para revisar depois e compartilhe com alguém que estuda elétrica!\n\n#UniversoEletrico #Eletrica #AutomacaoIndustrial #Eletricidade #ManutencaoIndustrial",
-    "approved": false,
+    "caption": "⚡ Como a máquina sabe a posição?\r\n\r\nEncoders ajudam no acompanhamento de eixos e transportadores. Conforme o tipo, fornecem posição incremental ou absoluta.\r\n\r\n💡 Gostou? Salve este post para revisar depois e compartilhe com alguém que estuda elétrica!\r\n\r\n#UniversoEletrico #Eletrica #AutomacaoIndustrial #Eletricidade #ManutencaoIndustrial",
+    "approved": true,
     "media_type": "IMAGE",
     "format": "feed"
   },
