@@ -2,6 +2,12 @@ name: Universo Eletrico - Robo Diario
 
 on:
   workflow_dispatch:
+  # Disparo excepcional de recuperacao quando este workflow for corrigido.
+  # Alteracoes em posts, legendas e state.json NAO acionam o robô.
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publicar.yml'
   schedule:
     # A configuracao de dias/horarios fica no content/schedule.json, editada no painel.
     # O cron apenas checa a agenda (GitHub executa agendamentos em UTC).
@@ -41,7 +47,7 @@ jobs:
 
       - name: Conferir agenda antes de executar
         id: agenda
-        if: github.event_name == 'schedule'
+        if: github.event_name == 'schedule' || github.event_name == 'push'
         run: python src/publish_daily.py --check-schedule
 
       - name: Instalar dependencias

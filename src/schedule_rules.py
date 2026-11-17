@@ -118,8 +118,11 @@ def slot_window_open(now, slot):
     local = now.astimezone(TZ)
     hour, minute = map(int, slot.split(":"))
     start = local.replace(hour=hour, minute=minute, second=0, microsecond=0)
-    # GitHub Actions pode iniciar depois do cron: janelinha de tolerancia.
-    return start <= local < start + timedelta(minutes=45)
+    # O agendador do GitHub pode pular diversas execucoes.
+    # Permitir recuperacao no mesmo dia, durante ate quatro horas.
+    # O limite de publicacoes e as reservas continuam sendo aplicados
+    # pelo publicador; uma execucao atrasada nao publica duas vezes.
+    return start <= local < start + timedelta(hours=4)
 
 
 def due_slot(raw_schedule, now):
@@ -132,7 +135,8 @@ def due_slot(raw_schedule, now):
     if not schedule["enabled"] or local_day.weekday() not in schedule["days"]:
         return None
     times = schedule.get("date_overrides", {}).get(local_day.isoformat(), schedule["times"])
-    return next((t for t in times if slot_window_open(now, t)), None)
+    # Em agendas com mais de um horario, prevalece o horario mais recente.
+    return next((t for t in reversed(times) if slot_window_open(now, t)), None)
 
 
 def upcoming(raw_schedule, now=None, days_ahead=14):
