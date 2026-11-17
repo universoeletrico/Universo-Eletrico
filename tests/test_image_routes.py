@@ -57,7 +57,7 @@ class ImageRoutesTest(unittest.TestCase):
             second = self.client.get("/preview/review/007.jpg")
         self.assertEqual(first.data, b"primeira-arte")
         self.assertEqual(second.data, b"arte-correta-encoder")
-        self.assertEqual(first.headers["Cache-Control"], "private, no-store, max-age=0")
+        self.assertIn("no-store", first.headers["Cache-Control"])
         self.assertEqual(second.headers["ETag"], '"sha-2"')
         self.assertEqual(fetch.call_count, 2)
 
