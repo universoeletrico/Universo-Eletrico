@@ -35,6 +35,8 @@ def ready_commercial_posts():
     O arquivo de campanhas é separado para não modificar a fila educativa,
     e a leitura não acrescenta chamadas ao helper load_json nos testes.
     """
+    if not read_schedule().get("commercial_enabled", False):
+        return []
     if not CAMPAIGNS_FILE.exists():
         return []
     from painel.affiliates import validate_affiliate_url, require_disclosure
