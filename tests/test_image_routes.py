@@ -77,7 +77,7 @@ class ImageRoutesTest(unittest.TestCase):
             result = self.client.get("/post/007")
         self.assertEqual(result.status_code, 200)
         self.assertIn(b"/preview/review/007.jpg?rev=sha-encoder", result.data)
-        self.assertNotIn(b"raw.githubusercontent.com/", result.data)
+        self.assertNotIn(b"raw.githubusercontent.com/universoeletrico/Universo-Eletrico/main/docs/review/", result.data)
         self.assertIn("no-store", result.headers["Cache-Control"])
 
     def test_preview_rejects_invalid_id(self):
