@@ -94,8 +94,8 @@
     "title": "IHM",
     "hook": "Operador e máquina",
     "body": "A IHM apresenta dados e comandos de um equipamento ao operador.",
-    "caption": "⚡ Operador e máquina\n\nInterface Homem-Máquina (IHM) é a tela ou painel usado para acompanhar estados, alarmes e comandos autorizados.\n\n💡 Gostou? Salve este post para revisar depois e compartilhe com alguém que estuda elétrica!\n\n#UniversoEletrico #Eletrica #AutomacaoIndustrial #Eletricidade #ManutencaoIndustrial",
-    "approved": false,
+    "caption": "⚡ Operador e máquina\r\n\r\nInterface Homem-Máquina (IHM) é a tela ou painel usado para acompanhar estados, alarmes e comandos autorizados.\r\n\r\n💡 Gostou? Salve este post para revisar depois e compartilhe com alguém que estuda elétrica!\r\n\r\n#UniversoEletrico #Eletrica #AutomacaoIndustrial #Eletricidade #ManutencaoIndustrial",
+    "approved": true,
     "media_type": "IMAGE",
     "format": "feed"
   },
