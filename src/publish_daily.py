@@ -189,13 +189,19 @@ def reserve_for_day(now):
     agenda = read_schedule()
     event = os.getenv('GITHUB_EVENT_NAME', '')
     slot = None
-    if event == 'schedule':
+    if event in ('schedule', 'push'):
+        # O push e usado somente para a recuperacao autorizada do workflow
+        # quando o cron do GitHub perde o horario. Nao ignora a agenda.
         slot = due_slot(agenda, now)
         if slot is None:
             print('Agenda pausada ou horario nao corresponde: nao reservar.')
             return None
-    elif event == 'workflow_dispatch' and os.getenv('MANUAL_TEST_POST_ID') != '002':
-        print('O robo diario nao publica por acionamento manual; use o teste separado.')
+    elif event == 'workflow_dispatch':
+        if os.getenv('MANUAL_TEST_POST_ID') != '002':
+            print('O robo diario nao publica por acionamento manual; use o teste separado.')
+            return None
+    else:
+        print('Evento nao autorizado para reservar publicacao.')
         return None
     # A regra geral de inicio permanece 13/11. Apenas o fluxo manual de 11/11
     # pode reservar o post 002 antes da data. Agendamentos e duplicacoes seguem protegidos.
