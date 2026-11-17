@@ -73,7 +73,8 @@ class ImageRoutesTest(unittest.TestCase):
                 "image_url": "/preview/007.jpg"}
         with patch.object(studio, "posts_with_status", return_value=[post]), \
              patch.object(studio, "staged_image",
-                          return_value=(b"arte-correta-encoder", "sha-encoder")):
+                          return_value=(b"arte-correta-encoder", "sha-encoder")), \
+             patch.dict(studio.os.environ, {"GITHUB_WRITE_TOKEN": "test-token"}):
             result = self.client.get("/post/007")
         self.assertEqual(result.status_code, 200)
         self.assertIn(b"/preview/review/007.jpg?rev=sha-encoder", result.data)
