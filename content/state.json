@@ -28,5 +28,11 @@
       "slot": "21:00"
     }
   ],
-  "externally_scheduled": []
+  "externally_scheduled": [],
+  "pending": {
+    "id": "005",
+    "local_date": "2026-11-17",
+    "reserved_at": "2026-11-17T22:27:03.887591+00:00",
+    "slot": "19:17"
+  }
 }
