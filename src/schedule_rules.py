@@ -110,10 +110,15 @@ def validate_schedule(raw):
             raise ValueError("Data do post fixado invalida.") from exc
         if not isinstance(post_id, str) or not re.fullmatch(r"(?:[0-9]{3}|C[0-9]{3})", post_id):
             raise ValueError("ID do post fixado invalido.")
+    # Publicacoes comerciais so entram na fila apos ativacao explicita.
+    commercial_enabled = raw.get("commercial_enabled", False)
+    if type(commercial_enabled) is not bool:
+        raise ValueError("commercial_enabled deve ser booleano.")
     result = {"timezone": "America/Sao_Paulo",
               "enabled": raw["enabled"],
               "days": sorted(days),
-              "times": sorted(times)}
+              "times": sorted(times),
+              "commercial_enabled": commercial_enabled}
     if post_overrides:
         result["post_overrides"] = dict(sorted(post_overrides.items()))
     if date_overrides:

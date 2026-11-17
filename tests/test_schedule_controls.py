@@ -134,6 +134,17 @@ class TestAgenda(unittest.TestCase):
             agenda.validate_schedule({**self.config, "date_overrides":
                                       {"2026-11-16": ["19:17", "21:00"]}})
 
+    def test_campanhas_bloqueadas_ate_autorizacao_explicita(self):
+        from unittest.mock import patch
+        with patch.object(pub, "read_schedule",
+                          return_value={**self.config, "commercial_enabled": False}):
+            self.assertEqual(pub.ready_commercial_posts(), [])
+        self.assertFalse(agenda.validate_schedule(self.config)["commercial_enabled"])
+        self.assertTrue(agenda.validate_schedule(
+            {**self.config, "commercial_enabled": True})["commercial_enabled"])
+        with self.assertRaises(ValueError):
+            agenda.validate_schedule({**self.config, "commercial_enabled": "true"})
+
     def test_uma_arte_por_slot(self):
         posts = [{"id": "003", "approved": True}]
         state = {"published": [{"id": "001", "local_date": "2026-11-13", "slot": "12:17"}]}
