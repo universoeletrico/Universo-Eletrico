@@ -95,10 +95,27 @@ def validate_schedule(raw):
                 not isinstance(special_times[0], str) or
                 not re.fullmatch(r"(?:[01][0-9]|2[0-3]):[0-5][0-9]", special_times[0])):
             raise ValueError("Horario excepcional invalido: apenas uma publicacao por dia.")
+    # Fixar uma arte aprovada por data impede que campanhas comerciais
+    # alterem publicacoes especificas ja combinadas para aquele dia.
+    post_overrides = raw.get("post_overrides", {})
+    if not isinstance(post_overrides, dict) or len(post_overrides) > 31:
+        raise ValueError("post_overrides invalido.")
+    for day, post_id in post_overrides.items():
+        if not isinstance(day, str) or not re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}", day):
+            raise ValueError("Data do post fixado invalida.")
+        try:
+            if datetime.strptime(day, "%Y-%m-%d").date().isoformat() != day:
+                raise ValueError("Data do post fixado invalida.")
+        except ValueError as exc:
+            raise ValueError("Data do post fixado invalida.") from exc
+        if not isinstance(post_id, str) or not re.fullmatch(r"(?:[0-9]{3}|C[0-9]{3})", post_id):
+            raise ValueError("ID do post fixado invalido.")
     result = {"timezone": "America/Sao_Paulo",
               "enabled": raw["enabled"],
               "days": sorted(days),
               "times": sorted(times)}
+    if post_overrides:
+        result["post_overrides"] = dict(sorted(post_overrides.items()))
     if date_overrides:
         result["date_overrides"] = dict(sorted(date_overrides.items()))
     if only_date is not None:

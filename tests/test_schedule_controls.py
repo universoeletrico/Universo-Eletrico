@@ -54,6 +54,16 @@ class TestAgenda(unittest.TestCase):
         late = self.now.replace(hour=16, minute=18)
         self.assertIsNone(agenda.due_slot(self.config, late))
 
+    def test_agenda_conserva_post_fixado(self):
+        config = {"timezone": "America/Sao_Paulo", "enabled": True,
+                  "days": list(range(7)), "times": ["19:17"],
+                  "post_overrides": {"2026-11-16": "004", "2026-11-17": "005"}}
+        result = agenda.validate_schedule(config)
+        self.assertEqual(result["post_overrides"]["2026-11-16"], "004")
+        with self.assertRaises(ValueError):
+            agenda.validate_schedule({**config, "post_overrides":
+                                      {"2026-11-16": "invalid-id"}})
+
     def test_recuperacao_apos_atraso_do_github(self):
         config = {"timezone": "America/Sao_Paulo", "enabled": True,
                   "days": list(range(7)), "times": ["19:17"],
