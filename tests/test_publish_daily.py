@@ -17,6 +17,19 @@ class TestPublisher(unittest.TestCase):
         p,err=pub.select_next(posts,{'published':[{'id':'001','local_date':'2026-11-07'}]},'2026-11-08')
         self.assertEqual(p['id'],'002'); self.assertIsNone(err)
 
+    def test_post_fixado_prevalece_sobre_campanha(self):
+        posts = [{'id':'004','approved':True},
+                 {'id':'C001','approved':True,'kind':'commercial'}]
+        state = {'published':[{'id':'003','local_date':'2026-11-15'}]}
+        post, reason = pub.select_next(
+            posts, state, '2026-11-16', preferred_id='004')
+        self.assertEqual(post['id'], '004')
+        self.assertIsNone(reason)
+        post, reason = pub.select_next(
+            posts, state, '2026-11-16', preferred_id='005')
+        self.assertIsNone(post)
+        self.assertIn('fixado', reason)
+
     def test_no_double_post_same_day(self):
         p,err=pub.select_next([{'id':'002','approved':True}],{'published':[{'id':'000','local_date':'2026-11-13'}]},'2026-11-13')
         self.assertIsNone(p);self.assertIn('Já foi publicado',err)
@@ -50,10 +63,10 @@ class TestPublisher(unittest.TestCase):
 
     def test_all_images_present(self):
         root=Path(__file__).resolve().parents[1]
-        # O carregador do publicador combina posts educativos e campanhas
-        # comerciais aprovadas. O catálogo educativo, porém, tem 30 artes.
+        # O catálogo educativo cresce ao criar novos posts no painel.
+        # Verificar IDs únicos e JPG de cada item sem fixar um número de artes.
         posts=json.loads((root/'content'/'posts.json').read_text(encoding='utf-8'))
-        self.assertEqual(len(posts),30)
+        self.assertGreaterEqual(len(posts),1)
         self.assertEqual(len({p['id'] for p in posts}),len(posts))
         for p in posts:
             self.assertTrue((root/'docs'/'posts'/f"{p['id']}.jpg").exists())
