@@ -341,6 +341,26 @@ def staged_image(pid):
     return result
 
 
+@app.get("/preview/review/<pid>.jpg")
+@login_required
+def preview_review_image(pid):
+    """Prévia privada da imagem em revisão, sem CDN nem cache de navegador."""
+    if not (len(pid) == 3 and pid.isascii() and pid.isdecimal()):
+        abort(404)
+    try:
+        candidate = staged_image(pid)
+    except (requests.RequestException, RuntimeError):
+        app.logger.warning("Não foi possível carregar a imagem em revisão %s.", pid)
+        abort(502, "A imagem em revisão está temporariamente indisponível.")
+    if candidate is None:
+        abort(404)
+    image, sha = candidate
+    result = Response(image, mimetype="image/jpeg")
+    result.set_etag(sha)
+    result.headers["Cache-Control"] = "private, no-store, max-age=0"
+    return result
+
+
 @app.post("/post/<pid>/imagem/enviar")
 @login_required
 def upload_post_image(pid):
@@ -430,10 +450,14 @@ def detail(pid):
         candidate = staged_image(pid)
     except requests.RequestException:
         app.logger.warning("Prévia da imagem em revisão indisponível.")
-    candidate_url = (f"https://raw.githubusercontent.com/{OWNER}/{REPO}/main/"
-                     f"docs/review/{pid}.jpg?rev={candidate[1]}" if candidate else None)
-    return render_template("detail.html", post=post, tab="artes",
-                           candidate_url=candidate_url)
+    # A revisão e a arte aprovada passam pelo próprio Studio, evitando
+    # imagens antigas servidas pelo cache do CDN do GitHub.
+    candidate_url = (url_for("preview_review_image", pid=pid, rev=candidate[1])
+                     if candidate else None)
+    page = Response(render_template("detail.html", post=post, tab="artes",
+                                    candidate_url=candidate_url), mimetype="text/html")
+    page.headers["Cache-Control"] = "private, no-store, max-age=0"
+    return page
 
 
 def github_file(path):
