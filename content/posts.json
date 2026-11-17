@@ -84,8 +84,8 @@
     "title": "Sensor capacitivo",
     "hook": "Só detecta metal?",
     "body": "Sensores capacitivos podem detectar materiais metálicos e não metálicos.",
-    "caption": "⚡ Só detecta metal?\n\nSensores capacitivos podem detectar materiais metálicos e não metálicos.\n\n🔎 NA PRÁTICA\nDiferentemente do indutivo, o capacitivo pode detectar materiais não metálicos, dependendo das condições de uso.\n\n💬 SUA VEZ: Você já viu um sensor capacitivo trabalhando com líquido, vidro ou plástico? Conte onde!\n\n📌 Salve para revisar e compartilhe com alguém que estuda elétrica e automação.\n\n#UniversoEletrico #AutomacaoIndustrial #EletricaIndustrial #ManutencaoIndustrial",
-    "approved": false,
+    "caption": "⚡ Só detecta metal?\r\n\r\nSensores capacitivos podem detectar materiais metálicos e não metálicos.\r\n\r\n🔎 NA PRÁTICA\r\nDiferentemente do indutivo, o capacitivo pode detectar materiais não metálicos, dependendo das condições de uso.\r\n\r\n💬 SUA VEZ: Você já viu um sensor capacitivo trabalhando com líquido, vidro ou plástico? Conte onde!\r\n\r\n📌 Salve para revisar e compartilhe com alguém que estuda elétrica e automação.\r\n\r\n#UniversoEletrico #AutomacaoIndustrial #EletricaIndustrial #ManutencaoIndustrial",
+    "approved": true,
     "media_type": "IMAGE",
     "format": "feed"
   },
