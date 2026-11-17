@@ -21,5 +21,6 @@
   "post_overrides": {
     "2026-11-16": "004",
     "2026-11-17": "005"
-  }
+  },
+  "commercial_enabled": false
 }
