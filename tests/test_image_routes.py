@@ -71,7 +71,7 @@ class ImageRoutesTest(unittest.TestCase):
                 "body": "Sensor de posição", "caption": "Legenda",
                 "status_key": "draft", "status_label": "Aguardando revisão",
                 "image_url": "/preview/007.jpg"}
-        with patch.object(studio, "posts_with_status", return_value=[post]), \\
+        with patch.object(studio, "posts_with_status", return_value=[post]), \
              patch.object(studio, "staged_image",
                           return_value=(b"arte-correta-encoder", "sha-encoder")):
             result = self.client.get("/post/007")
@@ -80,7 +80,7 @@ class ImageRoutesTest(unittest.TestCase):
         self.assertNotIn(b"raw.githubusercontent.com/", result.data)
         self.assertIn("no-store", result.headers["Cache-Control"])
 
-
+    def test_preview_rejects_invalid_id(self):
         self.login()
         result = self.client.get("/preview/0004.jpg")
         self.assertEqual(result.status_code, 404)
