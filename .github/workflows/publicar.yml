@@ -3,6 +3,7 @@ name: Universo Eletrico - Robo Diario
 on:
   workflow_dispatch:
   # Disparo excepcional de recuperacao quando este workflow for corrigido.
+  # A revisao do post fixado de 16/11 (#004) tambem e uma correcao autorizada.
   # Alteracoes em posts, legendas e state.json NAO acionam o robô.
   push:
     branches: [main]
