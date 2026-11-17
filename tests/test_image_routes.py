@@ -43,7 +43,44 @@ class ImageRoutesTest(unittest.TestCase):
             self.assertIn("no-store", result.headers.get("Cache-Control", ""))
             fetch.assert_called_once_with("docs/posts/004.jpg")
 
-    def test_preview_rejects_invalid_id(self):
+    def test_review_preview_is_protected(self):
+        response = self.client.get("/preview/review/007.jpg")
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/login", response.location)
+
+    def test_review_preview_reads_latest_staged_content_without_cache(self):
+        self.login()
+        with patch.object(studio, "staged_image",
+                          side_effect=[(b"primeira-arte", "sha-1"),
+                                       (b"arte-correta-encoder", "sha-2")]) as fetch:
+            first = self.client.get("/preview/review/007.jpg")
+            second = self.client.get("/preview/review/007.jpg")
+        self.assertEqual(first.data, b"primeira-arte")
+        self.assertEqual(second.data, b"arte-correta-encoder")
+        self.assertEqual(first.headers["Cache-Control"], "private, no-store, max-age=0")
+        self.assertEqual(second.headers["ETag"], '"sha-2"')
+        self.assertEqual(fetch.call_count, 2)
+
+    def test_review_preview_rejects_invalid_id(self):
+        self.login()
+        self.assertEqual(self.client.get("/preview/review/0007.jpg").status_code, 404)
+
+    def test_detail_uses_private_review_preview_and_no_cache(self):
+        self.login()
+        post = {"id": "007", "title": "Encoder", "hook": "Como mede?",
+                "body": "Sensor de posição", "caption": "Legenda",
+                "status_key": "draft", "status_label": "Aguardando revisão",
+                "image_url": "/preview/007.jpg"}
+        with patch.object(studio, "posts_with_status", return_value=[post]), \\
+             patch.object(studio, "staged_image",
+                          return_value=(b"arte-correta-encoder", "sha-encoder")):
+            result = self.client.get("/post/007")
+        self.assertEqual(result.status_code, 200)
+        self.assertIn(b"/preview/review/007.jpg?rev=sha-encoder", result.data)
+        self.assertNotIn(b"raw.githubusercontent.com/", result.data)
+        self.assertIn("no-store", result.headers["Cache-Control"])
+
+
         self.login()
         result = self.client.get("/preview/0004.jpg")
         self.assertEqual(result.status_code, 404)
