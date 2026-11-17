@@ -80,7 +80,7 @@ def save_state(state):
     tmp.replace(STATE_FILE)
 
 
-def select_next(posts, state, local_day, max_per_day=1, slot=None):
+def select_next(posts, state, local_day, max_per_day=1, slot=None, preferred_id=None):
     """Retorna proximo post; nunca pula reservas ou posts agendados."""
     if state.get('pending'):
         return None, ('Existe uma publicacao reservada, ainda sem confirmacao. '
@@ -100,6 +100,9 @@ def select_next(posts, state, local_day, max_per_day=1, slot=None):
     published = {entry['id'] for entry in state.get('published', [])}
     eligible = [post for post in posts
                 if post.get('approved', False) and post['id'] not in (published | reserved)]
+    if preferred_id is not None:
+        match = next((p for p in eligible if p['id'] == preferred_id), None)
+        return (match, None) if match else (None, 'Post fixado para hoje nao esta aprovado ou disponivel.')
     educational = [post for post in eligible if post.get('kind') != 'commercial']
     commercial = [post for post in eligible if post.get('kind') == 'commercial']
 
@@ -210,7 +213,8 @@ def reserve_for_day(now):
         selection_state['not_before_date'] = day
     post, reason = select_next(
         posts, selection_state, day,
-        max_per_day=len(agenda['times']), slot=slot
+        max_per_day=len(agenda['times']), slot=slot,
+        preferred_id=agenda.get('post_overrides', {}).get(day)
     )
     if post and os.getenv('MANUAL_TEST_POST_ID') and post['id'] != os.getenv('MANUAL_TEST_POST_ID'):
         raise RuntimeError('Post reservado nao corresponde ao teste manual autorizado.')
@@ -317,7 +321,10 @@ def check_schedule(now=None):
     if slot:
         posts, state = load_json(POSTS_FILE), load_json(STATE_FILE)
         today = now.astimezone(TZ).date().isoformat()
-        post, reason = select_next(posts, state, today, max_per_day=len(agenda['times']), slot=slot)
+        post, reason = select_next(
+            posts, state, today, max_per_day=len(agenda['times']), slot=slot,
+            preferred_id=agenda.get('post_overrides', {}).get(today)
+        )
         if post:
             output = os.getenv('GITHUB_OUTPUT')
             if output:
