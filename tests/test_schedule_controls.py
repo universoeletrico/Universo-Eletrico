@@ -51,8 +51,24 @@ class TestAgenda(unittest.TestCase):
         self.assertIsNone(agenda.due_slot(self.config, early))
 
     def test_slot_expirado_nao_vale(self):
-        late = self.now.replace(hour=13, minute=2)
+        late = self.now.replace(hour=16, minute=18)
         self.assertIsNone(agenda.due_slot(self.config, late))
+
+    def test_recuperacao_apos_atraso_do_github(self):
+        config = {"timezone": "America/Sao_Paulo", "enabled": True,
+                  "days": list(range(7)), "times": ["19:17"],
+                  "date_overrides": {"2026-11-16": ["21:00"]}}
+        tz = ZoneInfo("America/Sao_Paulo")
+        # A execucao perdida de 21h nao deve impedir a tentativa as 22h.
+        self.assertEqual(agenda.due_slot(config, datetime(2026, 11, 16, 22, 36, tzinfo=tz)), "21:00")
+        self.assertEqual(agenda.due_slot(config, datetime(2026, 11, 17, 22, 0, tzinfo=tz)), "19:17")
+        self.assertIsNone(agenda.due_slot(config, datetime(2026, 11, 17, 23, 18, tzinfo=tz)))
+        self.assertIsNone(agenda.due_slot(config, datetime(2026, 11, 18, 1, 0, tzinfo=tz)))
+
+    def test_em_multiplos_horarios_prestigia_slot_mais_recente(self):
+        tz = ZoneInfo("America/Sao_Paulo")
+        self.assertEqual(agenda.due_slot(self.config, datetime(2026, 11, 13, 19, 20, tzinfo=tz)), "19:17")
+
 
     def test_agenda_apenas_no_dia_autorizado(self):
         config = {**self.config, "only_date": "2026-11-16", "days": [0],
