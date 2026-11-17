@@ -21,5 +21,11 @@
       "published_at": "2026-11-16T02:02:33.321090+00:00"
     }
   ],
-  "externally_scheduled": []
+  "externally_scheduled": [],
+  "pending": {
+    "id": "004",
+    "local_date": "2026-11-16",
+    "reserved_at": "2026-11-17T01:40:32.146798+00:00",
+    "slot": "21:00"
+  }
 }
