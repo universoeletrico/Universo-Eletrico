@@ -47,13 +47,14 @@
       "local_date": "2026-11-19",
       "published_at": "2026-11-19T22:36:02.736772+00:00",
       "slot": "19:17"
+    },
+    {
+      "id": "008",
+      "media_id": "18113102666249820",
+      "local_date": "2026-11-20",
+      "published_at": "2026-11-20T22:22:56.339622+00:00",
+      "slot": "19:17"
     }
   ],
-  "externally_scheduled": [],
-  "pending": {
-    "id": "008",
-    "local_date": "2026-11-20",
-    "reserved_at": "2026-11-20T22:22:33.729090+00:00",
-    "slot": "19:17"
-  }
+  "externally_scheduled": []
 }
